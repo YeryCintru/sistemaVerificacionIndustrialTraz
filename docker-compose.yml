@@ -39,10 +39,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    volumes:
-      # Hot-reloading: vincula la carpeta local con el contenedor para ver los cambios en vivo sin reconstruir
-      - ./server:/app
-      - /app/node_modules
 
 volumes:
   mysql_data:

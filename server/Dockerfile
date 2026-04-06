@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:18-alpine
 
 # Crear y definir el directorio de trabajo dentro del contenedor
 WORKDIR /app
@@ -12,8 +12,11 @@ RUN npm install
 # Copiar el resto del código
 COPY . .
 
+# Compilar TypeScript antes de arrancar
+RUN npm run build
+
 # Exponer el puerto
 EXPOSE 3000
 
-# Usamos nodemon (dev) para el desarrollo continuo con volúmenes
-CMD ["npm", "run", "dev"]
+# Ejecutar el servidor compilado
+CMD ["npm", "start"]
