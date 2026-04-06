@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 /**
  * Código desarrollado por Yeray Navascués Trincado
  * Grado en Ingeniería Informática
