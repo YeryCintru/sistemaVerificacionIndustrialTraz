@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 
 import { Container } from 'typedi';
 import { ProductoController } from './controllers/producto.controller';
+import { OrdenController } from './controllers/orden.controller';
 
 dotenv.config();
 
@@ -17,5 +18,8 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 // Registro de rutas mediante Inyección de Dependencias
 const productoController = Container.get(ProductoController);
 app.use('/api/productos', productoController.getRouter());
+
+const ordenController = Container.get(OrdenController);
+app.use('/api/ordenesprod', ordenController.getRouter());
 
 export default app;
