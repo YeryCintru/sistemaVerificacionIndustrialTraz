@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { Container } from 'typedi';
 import { ProductoController } from './controllers/producto.controller';
 import { OrdenController } from './controllers/orden.controller';
+import { OperarioController } from './controllers/operario.controller';
 
 dotenv.config();
 
@@ -21,5 +22,9 @@ app.use('/api/productos', productoController.getRouter());
 
 const ordenController = Container.get(OrdenController);
 app.use('/api/ordenesprod', ordenController.getRouter());
+
+const operarioController = Container.get(OperarioController);
+app.use('/api/operarios', operarioController.getRouter());
+
 
 export default app;
