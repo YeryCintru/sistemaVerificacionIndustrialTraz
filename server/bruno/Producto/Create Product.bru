@@ -1,0 +1,20 @@
+meta {
+  name: Create Product
+  type: http
+  seq: 7
+}
+
+post {
+  url: http://localhost:3000/api/productos
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "codigo_producto": "PROD-101",
+    "nombre_producto": "Válvula de Presión V1",
+    "estado_producto": "Pendiente",
+    "documentacion_producto": "Ficha técnica v1.0"
+  }
+}
