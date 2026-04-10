@@ -44,4 +44,40 @@ export class OperarioService {
 
         return newOperario;
     }
+
+    /**
+     * Actualiza un operario existente.
+     * @param id ID del operario.
+     * @param data Datos a actualizar.
+     */
+    async updateOperario(id: number, data: Partial<Operario>): Promise<Omit<Operario, 'clave_operario'>> {
+        const updateData: Partial<Operario> = { ...data };
+
+        // Si se cambia la clave, hashearla
+        if (updateData.clave_operario) {
+            const saltRounds = 10;
+            updateData.clave_operario = await bcrypt.hash(updateData.clave_operario, saltRounds);
+        }
+
+        const updated = await this.operarioRepository.update(id, updateData);
+        if (!updated) {
+            throw new Error('OperarioNotFound');
+        }
+
+        const updatedOperario = await this.operarioRepository.findById(id);
+        if (!updatedOperario) throw new Error('InternalError');
+
+        return updatedOperario;
+    }
+
+    /**
+     * Elimina un operario.
+     * @param id ID del operario.
+     */
+    async deleteOperario(id: number): Promise<void> {
+        const deleted = await this.operarioRepository.delete(id);
+        if (!deleted) {
+            throw new Error('OperarioNotFound');
+        }
+    }
 }

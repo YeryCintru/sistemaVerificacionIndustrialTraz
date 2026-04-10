@@ -51,4 +51,34 @@ export class OperarioRepository {
         const [rows] = await pool.query<RowDataPacket[]>(query, [id]);
         return rows.length > 0 ? (rows[0] as Omit<Operario, 'clave_operario'>) : null;
     }
+
+    /**
+     * Actualiza un operario existente.
+     * @param id ID del operario.
+     * @param data Datos a actualizar.
+     * @returns Boolean indicando si se modificó alguna fila.
+     */
+    async update(id: number, data: Partial<Operario>): Promise<boolean> {
+        const fields = Object.keys(data).map(key => `${key.charAt(0).toUpperCase() + key.slice(1)} = ?`).join(', ');
+        const values = Object.values(data);
+        
+        if (fields.length === 0) return false;
+
+        const [result] = await pool.query<ResultSetHeader>(
+            `UPDATE Operario SET ${fields} WHERE Id_operario = ?`,
+            [...values, id]
+        );
+
+        return result.affectedRows > 0;
+    }
+
+    /**
+     * Elimina un operario por su ID.
+     * @param id ID del operario.
+     * @returns Boolean indicando si se eliminó alguna fila.
+     */
+    async delete(id: number): Promise<boolean> {
+        const [result] = await pool.query<ResultSetHeader>('DELETE FROM Operario WHERE Id_operario = ?', [id]);
+        return result.affectedRows > 0;
+    }
 }

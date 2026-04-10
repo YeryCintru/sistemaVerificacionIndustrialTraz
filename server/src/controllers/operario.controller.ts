@@ -11,6 +11,8 @@ export class OperarioController {
     ) {
         this.operarioRouter.get('/', this.getAll.bind(this));
         this.operarioRouter.post('/', this.register.bind(this));
+        this.operarioRouter.put('/:id', this.update.bind(this));
+        this.operarioRouter.delete('/:id', this.delete.bind(this));
     }
 
     /**
@@ -50,6 +52,47 @@ export class OperarioController {
             } else {
                 console.error('Error al registrar operario:', error);
                 res.status(400).json({ error: 'Datos de operario inválidos' });
+            }
+        }
+    }
+
+    /**
+     * PUT /:id
+     * Actualiza un operario existente.
+     */
+    async update(req: Request, res: Response): Promise<void> {
+        try {
+            const id = Number(req.params.id);
+            const data = req.body;
+            const updatedOperario = await this.operarioService.updateOperario(id, data);
+            res.status(200).json(updatedOperario);
+        } catch (error) {
+            if ((error as Error).message === 'OperarioNotFound') {
+                res.status(404).json({ error: 'Operario no encontrado' });
+            } else {
+                console.error('Error al actualizar operario:', error);
+                res.status(400).json({ error: 'Error al actualizar operario' });
+            }
+        }
+    }
+
+    /**
+     * DELETE /:id
+     * Elimina un operario.
+     */
+    async delete(req: Request, res: Response): Promise<void> {
+        try {
+            const id = Number(req.params.id);
+            await this.operarioService.deleteOperario(id);
+            res.status(204).send();
+        } catch (error) {
+            if ((error as Error).message === 'OperarioNotFound') {
+                res.status(404).json({ error: 'Operario no encontrado' });
+            } else if ((error as any).code === 'ER_ROW_IS_REFERENCED_2') {
+                res.status(409).json({ error: 'No se puede eliminar el operario porque tiene registros asociados (logs)' });
+            } else {
+                console.error('Error al eliminar operario:', error);
+                res.status(500).json({ error: 'Error al eliminar operario' });
             }
         }
     }

@@ -32,4 +32,30 @@ export class ProductoService {
 
         return newProducto;
     }
+
+    /**
+     * Actualiza un producto existente.
+     * @param id ID del producto.
+     * @param data Datos a actualizar.
+     */
+    async updateProducto(id: number, data: Partial<ProductoCreation>): Promise<Producto> {
+        const updated = await this.productoRepository.update(id, data);
+        if (!updated) {
+            throw new Error('ProductoNotFound');
+        }
+        const updatedProducto = await this.productoRepository.findById(id);
+        if (!updatedProducto) throw new Error('InternalError');
+        return updatedProducto;
+    }
+
+    /**
+     * Elimina un producto.
+     * @param id ID del producto.
+     */
+    async deleteProducto(id: number): Promise<void> {
+        const deleted = await this.productoRepository.delete(id);
+        if (!deleted) {
+            throw new Error('ProductoNotFound');
+        }
+    }
 }
