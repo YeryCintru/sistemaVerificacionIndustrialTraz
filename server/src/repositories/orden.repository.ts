@@ -54,4 +54,34 @@ export class OrdenRepository {
 
         return result.insertId;
     }
+
+    /**
+     * Actualiza una orden de producción existente.
+     * @param id ID de la orden.
+     * @param data Datos a actualizar.
+     * @returns Boolean indicando si se modificó alguna fila.
+     */
+    async update(id: number, data: Partial<OrdenProduccion>): Promise<boolean> {
+        const fields = Object.keys(data).map(key => `${key.charAt(0).toUpperCase() + key.slice(1)} = ?`).join(', ');
+        const values = Object.values(data);
+        
+        if (fields.length === 0) return false;
+
+        const [result] = await pool.query<ResultSetHeader>(
+            `UPDATE Orden_produccion SET ${fields} WHERE Id_ordenProd = ?`,
+            [...values, id]
+        );
+
+        return result.affectedRows > 0;
+    }
+
+    /**
+     * Elimina una orden de producción por su ID.
+     * @param id ID de la orden.
+     * @returns Boolean indicando si se eliminó alguna fila.
+     */
+    async delete(id: number): Promise<boolean> {
+        const [result] = await pool.query<ResultSetHeader>('DELETE FROM Orden_produccion WHERE Id_ordenProd = ?', [id]);
+        return result.affectedRows > 0;
+    }
 }

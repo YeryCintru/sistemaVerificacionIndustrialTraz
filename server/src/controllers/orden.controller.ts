@@ -12,6 +12,8 @@ export class OrdenController {
         this.ordenRouter.get('/', this.getAll.bind(this));
         this.ordenRouter.get('/:id', this.getById.bind(this));
         this.ordenRouter.post('/', this.create.bind(this));
+        this.ordenRouter.put('/:id', this.update.bind(this));
+        this.ordenRouter.delete('/:id', this.delete.bind(this));
     }
 
     /**
@@ -70,6 +72,48 @@ export class OrdenController {
                 res.status(409).json({ error: 'El lote de producción ya existe' });
             } else {
                 res.status(400).json({ error: 'Datos de orden inválidos' });
+            }
+        }
+    }
+
+    /**
+     * PUT /:id
+     * Actualiza una orden existente.
+     */
+    async update(req: Request, res: Response): Promise<void> {
+        try {
+            const id = Number(req.params.id);
+            const data = req.body;
+            const updatedOrden = await this.ordenService.updateOrden(id, data);
+            res.status(200).json(updatedOrden);
+        } catch (error) {
+            const msg = (error as Error).message;
+            if (msg === 'OrdenNotFound') {
+                res.status(404).json({ error: 'Orden no encontrada' });
+            } else if (msg === 'ProductoNotFound') {
+                res.status(400).json({ error: 'El producto asociado no existe' });
+            } else {
+                console.error('Error al actualizar orden:', error);
+                res.status(400).json({ error: 'Error al actualizar orden' });
+            }
+        }
+    }
+
+    /**
+     * DELETE /:id
+     * Elimina una orden.
+     */
+    async delete(req: Request, res: Response): Promise<void> {
+        try {
+            const id = Number(req.params.id);
+            await this.ordenService.deleteOrden(id);
+            res.status(204).send();
+        } catch (error) {
+            if ((error as Error).message === 'OrdenNotFound') {
+                res.status(404).json({ error: 'Orden no encontrada' });
+            } else {
+                console.error('Error al eliminar orden:', error);
+                res.status(500).json({ error: 'Error al eliminar orden' });
             }
         }
     }

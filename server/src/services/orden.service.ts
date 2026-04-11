@@ -47,4 +47,36 @@ export class OrdenService {
         // 3. Retornar la orden completa
         return await this.ordenRepository.findById(id);
     }
+
+    /**
+     * Actualiza una orden de producción existente.
+     * @param id ID de la orden.
+     * @param data Datos a actualizar.
+     */
+    async updateOrden(id: number, data: Partial<OrdenProduccion>): Promise<any> {
+        // Si se intenta cambiar el producto, validar que existe
+        if (data.id_producto) {
+            const producto = await this.productoRepository.findById(data.id_producto);
+            if (!producto) {
+                throw new Error('ProductoNotFound');
+            }
+        }
+
+        const updated = await this.ordenRepository.update(id, data);
+        if (!updated) {
+            throw new Error('OrdenNotFound');
+        }
+        return await this.ordenRepository.findById(id);
+    }
+
+    /**
+     * Elimina una orden de producción.
+     * @param id ID de la orden.
+     */
+    async deleteOrden(id: number): Promise<void> {
+        const deleted = await this.ordenRepository.delete(id);
+        if (!deleted) {
+            throw new Error('OrdenNotFound');
+        }
+    }
 }
