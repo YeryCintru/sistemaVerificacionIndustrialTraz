@@ -24,4 +24,28 @@ export class AuditService {
         const id = await this.auditRepository.create(data);
         return await this.auditRepository.findById(id);
     }
+
+    /**
+     * Actualiza un registro de auditoría existente.
+     * @param id ID del log.
+     * @param data Datos a actualizar.
+     */
+    async updateLog(id: number, data: Partial<AuditLog>): Promise<any> {
+        const updated = await this.auditRepository.update(id, data);
+        if (!updated) {
+            throw new Error('AuditLogNotFound');
+        }
+        return await this.auditRepository.findById(id);
+    }
+
+    /**
+     * Elimina un registro de auditoría.
+     * @param id ID del log.
+     */
+    async deleteLog(id: number): Promise<void> {
+        const deleted = await this.auditRepository.delete(id);
+        if (!deleted) {
+            throw new Error('AuditLogNotFound');
+        }
+    }
 }
