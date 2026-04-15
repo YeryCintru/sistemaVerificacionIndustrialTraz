@@ -44,15 +44,29 @@ export class OrdenRepository {
      * @returns ID de la orden creada.
      */
     async create(orden: OrdenCreation): Promise<number> {
-        const { lote_ordenProd, cantidad_ordenProd, id_producto, comentarios_ordenProd } = orden;
+        const { codigo_ordenProd, lote_ordenProd, cantidad_ordenProd, id_producto, comentarios_ordenProd, fechaCierre_ordenProd } = orden;
         
         const [result] = await pool.query<ResultSetHeader>(
-            `INSERT INTO Orden_produccion (Lote_ordenProd, Cantidad_ordenProd, Id_producto, Comentarios_ordenProd) 
-             VALUES (?, ?, ?, ?)`,
-            [lote_ordenProd, cantidad_ordenProd, id_producto, comentarios_ordenProd || null]
+            `INSERT INTO Orden_produccion (Codigo_ordenProd, Lote_ordenProd, Cantidad_ordenProd, Id_producto, Comentarios_ordenProd, FechaCierre_ordenProd) 
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [codigo_ordenProd, lote_ordenProd, cantidad_ordenProd, id_producto, comentarios_ordenProd || null, fechaCierre_ordenProd || null]
         );
 
         return result.insertId;
+    }
+
+    /**
+     * Obtiene el siguiente número de secuencia disponible para una orden/lote en un año dado.
+     */
+    async getNextSequenceByYear(year: number): Promise<number> {
+        const query = `
+            SELECT MAX(CAST(SUBSTRING_INDEX(Lote_ordenProd, '-', -1) AS UNSIGNED)) AS max_seq
+            FROM Orden_produccion
+            WHERE Lote_ordenProd LIKE ?
+        `;
+        const [rows] = await pool.query<RowDataPacket[]>(query, [`L-${year}-%`]);
+        const maxSeq = (rows[0] as any).max_seq;
+        return maxSeq ? Number(maxSeq) + 1 : 1;
     }
 
     /**

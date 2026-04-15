@@ -41,6 +41,17 @@ export class OrdenService {
             throw new Error('ProductoNotFound');
         }
 
+        const year = new Date().getFullYear();
+        const seq = await this.ordenRepository.getNextSequenceByYear(year);
+
+        if (!data.codigo_ordenProd || !/^ORD-\d{4}-\d+$/.test(data.codigo_ordenProd)) {
+            data.codigo_ordenProd = `ORD-${year}-${seq}`;
+        }
+
+        if (!data.lote_ordenProd || !/^L-\d{4}-\d+$/.test(data.lote_ordenProd)) {
+            data.lote_ordenProd = `L-${year}-${seq}`;
+        }
+
         // 2. Crear la orden
         const id = await this.ordenRepository.create(data);
         
@@ -59,6 +70,12 @@ export class OrdenService {
             const producto = await this.productoRepository.findById(data.id_producto);
             if (!producto) {
                 throw new Error('ProductoNotFound');
+            }
+        }
+
+        if (data.estado_ordenProd === 'Cerrada') {
+            if (!data.fechaCierre_ordenProd) {
+                data.fechaCierre_ordenProd = new Date();
             }
         }
 

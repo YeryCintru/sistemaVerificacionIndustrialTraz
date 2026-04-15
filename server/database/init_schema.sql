@@ -27,11 +27,13 @@ CREATE TABLE Producto (
 -- 3. Tabla Orden_produccion
 CREATE TABLE Orden_produccion (
     Id_ordenProd INT AUTO_INCREMENT PRIMARY KEY,
+    Codigo_ordenProd VARCHAR(100) NOT NULL,
     Lote_ordenProd VARCHAR(50) UNIQUE NOT NULL,
     Cantidad_ordenProd INT NOT NULL,
     CantidadCompletada_ordenProd INT DEFAULT 0,
     FechaInicio_ordenProd DATETIME DEFAULT CURRENT_TIMESTAMP,
-    Estado_ordenProd ENUM('Pendiente', 'En Progreso', 'Completada', 'Cancelada') NOT NULL DEFAULT 'Pendiente',
+    FechaCierre_ordenProd DATETIME,
+    Estado_ordenProd ENUM('Pendiente', 'En Progreso', 'Cerrada') NOT NULL DEFAULT 'Pendiente',
     Comentarios_ordenProd TEXT,
     Id_producto INT NOT NULL,
     FOREIGN KEY (Id_producto) REFERENCES Producto(Id_producto) ON DELETE RESTRICT ON UPDATE CASCADE
