@@ -56,15 +56,24 @@ export class OrdenRepository {
     }
 
     /**
-     * Obtiene el siguiente número de secuencia disponible para una orden/lote en un año dado.
+     * Verifica si existe una orden con el mismo código.
+     */
+    async existsByCodigo(codigo: string): Promise<boolean> {
+        const query = `SELECT 1 FROM Orden_produccion WHERE Codigo_ordenProd = ? LIMIT 1`;
+        const [rows] = await pool.query<RowDataPacket[]>(query, [codigo]);
+        return rows.length > 0;
+    }
+
+    /**
+     * Obtiene el siguiente número de secuencia disponible para una orden en un año dado.
      */
     async getNextSequenceByYear(year: number): Promise<number> {
         const query = `
-            SELECT MAX(CAST(SUBSTRING_INDEX(Lote_ordenProd, '-', -1) AS UNSIGNED)) AS max_seq
+            SELECT MAX(CAST(SUBSTRING_INDEX(Codigo_ordenProd, '-', -1) AS UNSIGNED)) AS max_seq
             FROM Orden_produccion
-            WHERE Lote_ordenProd LIKE ?
+            WHERE Codigo_ordenProd LIKE ?
         `;
-        const [rows] = await pool.query<RowDataPacket[]>(query, [`L-${year}-%`]);
+        const [rows] = await pool.query<RowDataPacket[]>(query, [`ORD-${year}-%`]);
         const maxSeq = (rows[0] as any).max_seq;
         return maxSeq ? Number(maxSeq) + 1 : 1;
     }

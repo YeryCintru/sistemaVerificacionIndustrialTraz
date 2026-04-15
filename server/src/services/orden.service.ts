@@ -35,16 +35,20 @@ export class OrdenService {
      * @param data Datos de la orden.
      */
     async createOrden(data: OrdenCreation): Promise<any> {
-        // 1. Validar que el producto existe
+        //Validar que el producto existe
         const producto = await this.productoRepository.findById(data.id_producto);
         if (!producto) {
             throw new Error('ProductoNotFound');
         }
 
         const year = new Date().getFullYear();
-        const seq = await this.ordenRepository.getNextSequenceByYear(year);
+        let seq = await this.ordenRepository.getNextSequenceByYear(year);
 
-        if (!data.codigo_ordenProd || !/^ORD-\d{4}-\d+$/.test(data.codigo_ordenProd)) {
+        //Lógica para validar el código de orden y lote, si no son válidos o ya existen, se generan automáticamente
+        const isCodigoValid = data.codigo_ordenProd && /^ORD-\d{4}-\d+$/.test(data.codigo_ordenProd);
+        const isCodigoDuplicate = isCodigoValid && await this.ordenRepository.existsByCodigo(data.codigo_ordenProd!);
+
+        if (!isCodigoValid || isCodigoDuplicate) {
             data.codigo_ordenProd = `ORD-${year}-${seq}`;
         }
 
@@ -52,10 +56,10 @@ export class OrdenService {
             data.lote_ordenProd = `L-${year}-${seq}`;
         }
 
-        // 2. Crear la orden
+        //Crear la orden
         const id = await this.ordenRepository.create(data);
         
-        // 3. Retornar la orden completa
+        //Retornar la orden completa
         return await this.ordenRepository.findById(id);
     }
 

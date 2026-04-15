@@ -27,8 +27,8 @@ CREATE TABLE Producto (
 -- 3. Tabla Orden_produccion
 CREATE TABLE Orden_produccion (
     Id_ordenProd INT AUTO_INCREMENT PRIMARY KEY,
-    Codigo_ordenProd VARCHAR(100) NOT NULL,
-    Lote_ordenProd VARCHAR(50) UNIQUE NOT NULL,
+    Codigo_ordenProd VARCHAR(100) UNIQUE NOT NULL,
+    Lote_ordenProd VARCHAR(50) NOT NULL,
     Cantidad_ordenProd INT NOT NULL,
     CantidadCompletada_ordenProd INT DEFAULT 0,
     FechaInicio_ordenProd DATETIME DEFAULT CURRENT_TIMESTAMP,
