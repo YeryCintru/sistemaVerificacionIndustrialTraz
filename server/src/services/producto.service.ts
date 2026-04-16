@@ -23,6 +23,20 @@ export class ProductoService {
      * @returns Producto recién creado.
      */
     async createProducto(data: ProductoCreation): Promise<Producto> {
+        const nextSeq = await this.productoRepository.getNextSequence();
+
+        const isCodigoValid = data.codigo_producto && /^PROD-\d+$/.test(data.codigo_producto);
+        const isCodigoDuplicate = isCodigoValid && await this.productoRepository.existsByCodigo(data.codigo_producto!);
+
+        if (!isCodigoValid || isCodigoDuplicate) {
+            data.codigo_producto = `PROD-${nextSeq}`;
+        }
+
+        const validStates = ['Correcto', 'Bloqueado', 'Baja'] as const;
+        if (!data.estado_producto || !validStates.includes(data.estado_producto)) {
+            data.estado_producto = 'Correcto';
+        }
+
         const id = await this.productoRepository.create(data);
         const newProducto = await this.productoRepository.findById(id);
 

@@ -26,10 +26,33 @@ export class ProductoRepository {
         const [result] = await pool.query<ResultSetHeader>(
             `INSERT INTO Producto (Codigo_producto, Nombre_producto, Estado_producto, Verificador_producto, Documentacion_producto) 
              VALUES (?, ?, ?, ?, ?)`,
-            [codigo_producto, nombre_producto, estado_producto || 'Pendiente', verificador_producto || null, documentacion_producto || null]
+            [codigo_producto, nombre_producto, estado_producto || 'Correcto', verificador_producto || null, documentacion_producto || null]
         );
 
         return result.insertId;
+    }
+
+    /**
+     * Verifica si existe un producto con el mismo código.
+     */
+    async existsByCodigo(codigo: string): Promise<boolean> {
+        const query = `SELECT 1 FROM Producto WHERE Codigo_producto = ? LIMIT 1`;
+        const [rows] = await pool.query<RowDataPacket[]>(query, [codigo]);
+        return rows.length > 0;
+    }
+
+    /**
+     * Obtiene el siguiente número de secuencia para el código de producto.
+     */
+    async getNextSequence(): Promise<number> {
+        const query = `
+            SELECT MAX(CAST(SUBSTRING_INDEX(Codigo_producto, '-', -1) AS UNSIGNED)) AS max_seq
+            FROM Producto
+            WHERE Codigo_producto LIKE 'PROD-%'
+        `;
+        const [rows] = await pool.query<RowDataPacket[]>(query);
+        const maxSeq = (rows[0] as any).max_seq;
+        return maxSeq ? Number(maxSeq) + 1 : 1;
     }
 
     /**

@@ -18,7 +18,7 @@ CREATE TABLE Producto (
     Id_producto INT AUTO_INCREMENT PRIMARY KEY,
     Codigo_producto VARCHAR(50) UNIQUE NOT NULL,
     Nombre_producto VARCHAR(100) NOT NULL,
-    Estado_producto ENUM('Correcto', 'Defectuoso', 'Pendiente') NOT NULL DEFAULT 'Pendiente',
+    Estado_producto ENUM('Correcto', 'Bloqueado', 'Baja') NOT NULL DEFAULT 'Correcto',
     Verificador_producto VARCHAR(100),
     FechaCreacion_producto DATETIME DEFAULT CURRENT_TIMESTAMP,
     Documentacion_producto TEXT

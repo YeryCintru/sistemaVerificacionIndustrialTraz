@@ -1,7 +1,7 @@
 /**
  * Tipos de estado para un Producto.
  */
-export type EstadoProducto = 'Correcto' | 'Defectuoso' | 'Pendiente';
+export type EstadoProducto = 'Correcto' | 'Bloqueado' | 'Baja';
 
 /**
  * Interfaz principal que representa un Producto.
@@ -20,7 +20,7 @@ export interface Producto {
  * Interfaz para la creación de un nuevo Producto.
  */
 export interface ProductoCreation {
-    codigo_producto: string;
+    codigo_producto?: string;
     nombre_producto: string;
     estado_producto?: EstadoProducto;
     verificador_producto?: string;
