@@ -39,6 +39,22 @@ export class OrdenRepository {
     }
 
     /**
+     * Busca una orden por su código.
+     * @param codigo Código de la orden.
+     * @returns Orden o null.
+     */
+    async findByCodigo(codigo: string): Promise<any | null> {
+        const query = `
+            SELECT o.*, p.Nombre_producto 
+            FROM Orden_produccion o
+            JOIN Producto p ON o.Id_producto = p.Id_producto
+            WHERE o.Codigo_ordenProd = ?
+        `;
+        const [rows] = await pool.query<RowDataPacket[]>(query, [codigo]);
+        return rows.length > 0 ? rows[0] : null;
+    }
+
+    /**
      * Crea una nueva orden de producción.
      * @param orden Datos de la orden.
      * @returns ID de la orden creada.

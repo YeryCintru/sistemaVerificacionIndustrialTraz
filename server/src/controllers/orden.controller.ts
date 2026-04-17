@@ -10,6 +10,7 @@ export class OrdenController {
         private readonly ordenService: OrdenService
     ) {
         this.ordenRouter.get('/', this.getAll.bind(this));
+        this.ordenRouter.get('/codigo/:codigo', this.getByCodigo.bind(this));
         this.ordenRouter.get('/:id', this.getById.bind(this));
         this.ordenRouter.post('/', this.create.bind(this));
         this.ordenRouter.put('/:id', this.update.bind(this));
@@ -34,6 +35,25 @@ export class OrdenController {
         } catch (error) {
             console.error('Error al obtener órdenes:', error);
             res.status(500).json({ error: 'Error interno al listar órdenes' });
+        }
+    }
+
+    /**
+     * GET /codigo/:codigo
+     * Detalle de una orden por código.
+     */
+    async getByCodigo(req: Request, res: Response): Promise<void> {
+        try {
+            //Corregir posible error de tipo en req.params.codigo
+            const codigo = Array.isArray(req.params.codigo) ? req.params.codigo[0] : req.params.codigo;
+            const orden = await this.ordenService.getOrdenByCodigo(codigo);
+            res.status(200).json(orden);
+        } catch (error) {
+            if ((error as Error).message === 'OrdenNotFound') {
+                res.status(404).json({ error: 'Orden de producción no encontrada' });
+            } else {
+                res.status(500).json({ error: 'Error al recuperar la orden' });
+            }
         }
     }
 

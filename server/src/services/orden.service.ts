@@ -31,6 +31,18 @@ export class OrdenService {
     }
 
     /**
+     * Obtiene el detalle de una orden específica por su código.
+     * @param codigo Código de la orden.
+     */
+    async getOrdenByCodigo(codigo: string): Promise<any> {
+        const orden = await this.ordenRepository.findByCodigo(codigo);
+        if (!orden) {
+            throw new Error('OrdenNotFound');
+        }
+        return orden;
+    }
+
+    /**
      * Registra una nueva orden de producción.
      * @param data Datos de la orden.
      */
