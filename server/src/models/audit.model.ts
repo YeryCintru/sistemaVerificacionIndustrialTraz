@@ -10,6 +10,7 @@ export interface AuditLog {
     comentarios_log?: string;
     id_operario?: number;
     id_ordenProd?: number;
+    id_producto?: number;
 }
 
 /**
@@ -21,4 +22,5 @@ export interface AuditLogCreation {
     comentarios_log?: string;
     id_operario?: number;
     id_ordenProd?: number;
+    id_producto?: number;
 }

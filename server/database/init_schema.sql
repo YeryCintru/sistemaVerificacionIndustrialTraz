@@ -49,6 +49,8 @@ CREATE TABLE Auditoria (
     Comentarios_log TEXT,
     Id_operario INT,
     Id_ordenProd INT,
+    Id_producto INT,
     FOREIGN KEY (Id_operario) REFERENCES Operario(Id_operario) ON DELETE SET NULL ON UPDATE CASCADE,
-    FOREIGN KEY (Id_ordenProd) REFERENCES Orden_produccion(Id_ordenProd) ON DELETE SET NULL ON UPDATE CASCADE
+    FOREIGN KEY (Id_ordenProd) REFERENCES Orden_produccion(Id_ordenProd) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (Id_producto) REFERENCES Producto(Id_producto) ON DELETE SET NULL ON UPDATE CASCADE
 );
