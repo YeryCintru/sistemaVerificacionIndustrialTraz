@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Industrial Traceability API",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
