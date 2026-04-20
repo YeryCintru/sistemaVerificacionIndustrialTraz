@@ -1,12 +1,14 @@
 import { Service } from 'typedi';
 import { ProductoRepository } from '../repositories/producto.repository';
+import { AuditService } from './audit.service';
 import { Producto, ProductoCreation } from '../models/productos.model';
 
 @Service()
 export class ProductoService {
 
     constructor(
-        private readonly productoRepository: ProductoRepository
+        private readonly productoRepository: ProductoRepository,
+        private readonly auditService: AuditService
     ) { }
 
     /**
@@ -44,6 +46,13 @@ export class ProductoService {
             throw new Error('No se pudo recuperar el producto creado');
         }
 
+        await this.auditService.logAction({
+            accion_log: 'Crear producto',
+            resultado_log: 'Éxito',
+            comentarios_log: `Código: ${newProducto.codigo_producto || 'N/A'}`,
+            id_producto: newProducto.id_producto
+        });
+
         return newProducto;
     }
 
@@ -59,6 +68,14 @@ export class ProductoService {
         }
         const updatedProducto = await this.productoRepository.findById(id);
         if (!updatedProducto) throw new Error('InternalError');
+
+        await this.auditService.logAction({
+            accion_log: 'Actualizar producto',
+            resultado_log: 'Éxito',
+            comentarios_log: `ID: ${id}, Código: ${updatedProducto.codigo_producto}`,
+            id_producto: id
+        });
+
         return updatedProducto;
     }
 

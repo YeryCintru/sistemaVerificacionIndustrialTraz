@@ -1,6 +1,7 @@
 import { Service } from 'typedi';
 import { OrdenRepository } from '../repositories/orden.repository';
 import { ProductoRepository } from '../repositories/producto.repository';
+import { AuditService } from './audit.service';
 import { OrdenProduccion, OrdenCreation } from '../models/ordenes.model';
 
 @Service()
@@ -8,7 +9,8 @@ export class OrdenService {
     
     constructor(
         private readonly ordenRepository: OrdenRepository,
-        private readonly productoRepository: ProductoRepository
+        private readonly productoRepository: ProductoRepository,
+        private readonly auditService: AuditService
     ) {}
 
     /**
@@ -71,8 +73,19 @@ export class OrdenService {
         //Crear la orden
         const id = await this.ordenRepository.create(data);
         
-        //Retornar la orden completa
-        return await this.ordenRepository.findById(id);
+        const newOrden = await this.ordenRepository.findById(id);
+        if (!newOrden) {
+            throw new Error('No se pudo recuperar la orden creada');
+        }
+
+        await this.auditService.logAction({
+            accion_log: 'Crear orden',
+            resultado_log: 'Éxito',
+            comentarios_log: `Código: ${newOrden.Codigo_ordenProd || newOrden.codigo_ordenProd || 'N/A'}`,
+            id_ordenProd: id
+        });
+
+        return newOrden;
     }
 
     /**
@@ -99,7 +112,19 @@ export class OrdenService {
         if (!updated) {
             throw new Error('OrdenNotFound');
         }
-        return await this.ordenRepository.findById(id);
+        const updatedOrden = await this.ordenRepository.findById(id);
+        if (!updatedOrden) {
+            throw new Error('InternalError');
+        }
+
+        await this.auditService.logAction({
+            accion_log: 'Actualizar orden',
+            resultado_log: 'Éxito',
+            comentarios_log: `ID: ${id}, Código: ${updatedOrden.Codigo_ordenProd || updatedOrden.codigo_ordenProd || 'N/A'}`,
+            id_ordenProd: id
+        });
+
+        return updatedOrden;
     }
 
     /**

@@ -12,10 +12,11 @@ export class AuditRepository {
      */
     async findAll(): Promise<any[]> {
         const query = `
-            SELECT a.*, o.Nombre_operario, op.Lote_ordenProd 
+            SELECT a.*, o.Nombre_operario, op.Lote_ordenProd, p.Nombre_producto 
             FROM Auditoria a
             LEFT JOIN Operario o ON a.Id_operario = o.Id_operario
             LEFT JOIN Orden_produccion op ON a.Id_ordenProd = op.Id_ordenProd
+            LEFT JOIN Producto p ON a.Id_producto = p.Id_producto
             ORDER BY a.Momento_log DESC
         `;
         const [rows] = await pool.query<RowDataPacket[]>(query);
@@ -28,15 +29,15 @@ export class AuditRepository {
      * @returns ID del log creado.
      */
     async create(log: AuditLogCreation): Promise<number> {
-        const { accion_log, resultado_log, comentarios_log, id_operario, id_ordenProd } = log;
+        const { accion_log, resultado_log, comentarios_log, id_operario, id_ordenProd, id_producto } = log;
         
         // Generamos un número de log único simple (LOG-timestamp)
         const numero_log = `LOG-${Date.now()}`;
 
         const [result] = await pool.query<ResultSetHeader>(
-            `INSERT INTO Auditoria (Numero_log, Accion_log, Resultado_log, Comentarios_log, Id_operario, Id_ordenProd) 
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [numero_log, accion_log, resultado_log, comentarios_log || null, id_operario || null, id_ordenProd || null]
+            `INSERT INTO Auditoria (Numero_log, Accion_log, Resultado_log, Comentarios_log, Id_operario, Id_ordenProd, Id_producto) 
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [numero_log, accion_log, resultado_log, comentarios_log || null, id_operario || null, id_ordenProd || null, id_producto || null]
         );
 
         return result.insertId;
@@ -47,10 +48,11 @@ export class AuditRepository {
      */
     async findById(id: number): Promise<any | null> {
         const query = `
-            SELECT a.*, o.Nombre_operario, op.Lote_ordenProd 
+            SELECT a.*, o.Nombre_operario, op.Lote_ordenProd, p.Nombre_producto 
             FROM Auditoria a
             LEFT JOIN Operario o ON a.Id_operario = o.Id_operario
             LEFT JOIN Orden_produccion op ON a.Id_ordenProd = op.Id_ordenProd
+            LEFT JOIN Producto p ON a.Id_producto = p.Id_producto
             WHERE a.Id_log = ?
         `;
         const [rows] = await pool.query<RowDataPacket[]>(query, [id]);
