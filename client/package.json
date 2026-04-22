@@ -2,9 +2,9 @@
   "name": "trazabilidad-electron-client",
   "version": "1.0.0",
   "description": "Cliente nativo Electron para verificación de productos en línea de producción",
-  "main": "dist/main.js",
+  "main": "dist/electron-main.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && vite build",
     "start": "npm run build && electron .",
     "dev": "npm run build && electron . --dev"
   },
@@ -17,11 +17,18 @@
   "author": "Yeray Navascués Trincado",
   "license": "ISC",
   "dependencies": {
-    "axios": "^1.6.0"
+    "axios": "^1.6.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "electron": "^28.0.0",
     "typescript": "^5.6.2",
-    "@types/node": "^20.14.2"
+    "vite": "^5.4.1",
+    "@vitejs/plugin-react": "^4.3.1",
+    "@types/node": "^20.14.2",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@types/electron": "^1.6.12"
   }
 }

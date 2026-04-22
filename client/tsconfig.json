@@ -4,7 +4,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -13,5 +13,5 @@
     "resolveJsonModule": true,
     "types": ["node", "electron"]
   },
-  "include": ["src/**/*"]
+  "include": ["electron-main.ts", "src/preload.ts"]
 }
