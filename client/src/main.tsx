@@ -1,7 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { getOrdenPorCodigo } from './services/api';
 
 function App() {
+  React.useEffect(() => {
+    getOrdenPorCodigo('ORD-2026-1').catch(() => {});
+  }, []);
+
   return (
     <div style={{ padding: 24, fontFamily: 'Segoe UI, sans-serif' }}>
       <h1>Trazabilidad Industrial</h1>
