@@ -9,6 +9,7 @@ export class OperarioController {
     constructor(
         private readonly operarioService: OperarioService
     ) {
+        this.operarioRouter.post('/auth/login', this.login.bind(this));
         this.operarioRouter.get('/', this.getAll.bind(this));
         this.operarioRouter.post('/', this.register.bind(this));
         this.operarioRouter.put('/:id', this.update.bind(this));
@@ -20,6 +21,29 @@ export class OperarioController {
      */
     getRouter(): Router {
         return this.operarioRouter;
+    }
+
+    /**
+     * POST /auth/login
+     * Login de un operario
+     */
+    async login(req: Request, res: Response): Promise<void> {
+        try {
+            const operarioLogin = req.body;
+            const authResponse = await this.operarioService.login(operarioLogin);
+            res.status(200).json(authResponse);
+        } catch (error) {
+            const errorMessage = (error as Error).message;
+
+            if (errorMessage === 'OperarioLoginValidationError') {
+                res.status(400).json({ error: 'Datos de login inválidos' });
+            } else if (errorMessage === 'InvalidCredentialsError') {
+                res.status(401).json({ error: 'Nombre de operario o clave incorrectos' });
+            } else {
+                console.error('Error en login de operario:', error);
+                res.status(500).json({ error: 'Error interno en el servidor' });
+            }
+        }
     }
 
     /**
