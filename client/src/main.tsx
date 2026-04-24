@@ -3,7 +3,13 @@ import ReactDOM from 'react-dom/client';
 import { getOrdenPorCodigo } from './services/api';
 
 function App() {
+  const [codigo, setCodigo] = React.useState('');
 
+  const handleBuscar = async () => {
+    if (codigo.trim()) {
+      await getOrdenPorCodigo(codigo).catch(() => {});
+    }
+  };
 
   return (
     <div style={{
@@ -26,6 +32,9 @@ function App() {
           <input
             type="text"
             placeholder="Ingresa el código de orden"
+            value={codigo}
+            onChange={(e) => setCodigo(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleBuscar()}
             style={{
               padding: '10px 15px',
               fontSize: '16px',
@@ -35,7 +44,7 @@ function App() {
             }}
           />
           <button
-            //onClick
+            onClick={handleBuscar}
             style={{
               padding: '10px 20px',
               fontSize: '16px',
