@@ -20,6 +20,15 @@ export interface OrdenProduccion {
   Nombre_producto: string;
 }
 
+export async function login(Nombre_operario: string, Clave_operario: string): Promise<any> {
+  const response = await axios.post(`${BASE_URL}/api/operarios/auth/login`, {
+    Nombre_operario,
+    Clave_operario
+  });
+  console.log('Login exitoso:', response.data);
+  return response.data;
+}
+
 export async function getOrdenPorCodigo(codigoOrden: string): Promise<OrdenProduccion> {
   const response = await axios.get<OrdenProduccion>(
     `${BASE_URL}/api/ordenesprod/codigo/${encodeURIComponent(codigoOrden)}`
