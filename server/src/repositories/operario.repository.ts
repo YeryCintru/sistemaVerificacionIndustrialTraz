@@ -10,10 +10,10 @@ export class OperarioRepository {
      * Obtiene todos los operarios.
      * @returns Array de operarios (sin la clave por seguridad).
      */
-    async findAll(): Promise<Omit<Operario, 'clave_operario'>[]> {
+    async findAll(): Promise<Omit<Operario, 'Clave_operario'>[]> {
         const query = 'SELECT Id_operario, Nombre_operario, Rol_operario FROM Operario';
         const [rows] = await pool.query<RowDataPacket[]>(query);
-        return rows as Omit<Operario, 'clave_operario'>[];
+        return rows as Omit<Operario, 'Clave_operario'>[];
     }
 
     /**
@@ -33,11 +33,11 @@ export class OperarioRepository {
      * @returns ID del operario creado.
      */
     async create(operario: OperarioCreation): Promise<number> {
-        const { nombre_operario, clave_operario, rol_operario } = operario;
+        const { Nombre_operario, Clave_operario, Rol_operario } = operario;
         
         const [result] = await pool.query<ResultSetHeader>(
             'INSERT INTO Operario (Nombre_operario, Clave_operario, Rol_operario) VALUES (?, ?, ?)',
-            [nombre_operario, clave_operario, rol_operario]
+            [Nombre_operario, Clave_operario, Rol_operario]
         );
 
         return result.insertId;
@@ -46,10 +46,10 @@ export class OperarioRepository {
     /**
      * Busca un operario por ID.
      */
-    async findById(id: number): Promise<Omit<Operario, 'clave_operario'> | null> {
+    async findById(id: number): Promise<Omit<Operario, 'Clave_operario'> | null> {
         const query = 'SELECT Id_operario, Nombre_operario, Rol_operario FROM Operario WHERE Id_operario = ?';
         const [rows] = await pool.query<RowDataPacket[]>(query, [id]);
-        return rows.length > 0 ? (rows[0] as Omit<Operario, 'clave_operario'>) : null;
+        return rows.length > 0 ? (rows[0] as Omit<Operario, 'Clave_operario'>) : null;
     }
 
     /**
