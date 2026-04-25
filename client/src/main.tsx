@@ -1,65 +1,74 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { getOrdenPorCodigo } from './services/api';
+import { getOrdenPorCodigo, OrdenProduccion } from './services/api';
+import { BusquedaOrden } from './pages/BusquedaOrden';
+import { DetalleOrden } from './pages/DetalleOrden';
 
 function App() {
-  const [codigo, setCodigo] = React.useState('');
+  const [ordenActual, setOrdenActual] = React.useState<OrdenProduccion | null>(null);
+  const [cargando, setCargando] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
-  const handleBuscar = async () => {
-    if (codigo.trim()) {
-      await getOrdenPorCodigo(codigo).catch(() => {});
+  const handleBuscar = async (codigo: string) => {
+    setCargando(true);
+    setError(null);
+    try {
+      const orden = await getOrdenPorCodigo(codigo);
+      setOrdenActual(orden);
+    } catch (err) {
+      setError('No se encontró la orden. Verifica el código e intenta nuevamente.');
+      console.error(err);
+    } finally {
+      setCargando(false);
     }
   };
 
+  const handleVolver = () => {
+    setOrdenActual(null);
+    setError(null);
+  };
+
   return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      height: '100vh',
-      fontFamily: 'Segoe UI, sans-serif',
-      backgroundColor: '#f5f5f5'
-    }}>
-      <div style={{
-        padding: '40px',
-        backgroundColor: 'white',
-        borderRadius: '8px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        textAlign: 'center'
-      }}>
-        <h1>Búsqueda de Orden</h1>
-        <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-          <input
-            type="text"
-            placeholder="Ingresa el código de orden"
-            value={codigo}
-            onChange={(e) => setCodigo(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleBuscar()}
-            style={{
-              padding: '10px 15px',
-              fontSize: '16px',
-              border: '1px solid #ccc',
+    <>
+      {ordenActual ? (
+        <DetalleOrden orden={ordenActual} onVolver={handleVolver} />
+      ) : (
+        <>
+          <BusquedaOrden onBuscar={handleBuscar} />
+          {cargando && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: 'rgba(0,0,0,0.3)'
+            }}>
+              <p style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px' }}>
+                Cargando...
+              </p>
+            </div>
+          )}
+          {error && (
+            <div style={{
+              position: 'fixed',
+              bottom: '20px',
+              right: '20px',
+              backgroundColor: '#f8d7da',
+              color: '#721c24',
+              padding: '15px 20px',
               borderRadius: '4px',
-              width: '250px'
-            }}
-          />
-          <button
-            onClick={handleBuscar}
-            style={{
-              padding: '10px 20px',
-              fontSize: '16px',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            Buscar
-          </button>
-        </div>
-      </div>
-    </div>
+              border: '1px solid #f5c6cb'
+            }}>
+              {error}
+            </div>
+          )}
+        </>
+      )}
+    </>
   );
 }
 
