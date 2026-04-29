@@ -9,9 +9,8 @@ import { Login } from './pages/Login';
 function App() {
   const [ordenActual, setOrdenActual] = React.useState<OrdenProduccion | null>(null);
 
-  const handleBuscar = async (codigo: string) => {
+  const handleBuscar = async (orden: OrdenProduccion) => {
     try {
-      const orden = await getOrdenPorCodigo(codigo);
       setOrdenActual(orden);
     } catch (err) {
       console.error('Error al buscar orden:', err);
@@ -28,11 +27,11 @@ function App() {
       <Routes>
         {/* Ruta de Login - Página inicial */}
         <Route path="/login" element={<Login />} />
-        
+
         {/* Ruta de Búsqueda y Detalle - Comparten el estado */}
         <Route path="/busqueda" element={<BusquedaOrden onBuscar={handleBuscar} />} />
         <Route path="/detalle" element={ordenActual ? <DetalleOrden orden={ordenActual} onVolver={handleVolver} /> : <Navigate to="/busqueda" />} />
-        
+
         {/* Rutas por defecto - Redirigen al login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/login" replace />} />

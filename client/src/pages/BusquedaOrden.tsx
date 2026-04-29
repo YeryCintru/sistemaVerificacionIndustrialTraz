@@ -1,15 +1,35 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getOrdenPorCodigo, OrdenProduccion } from '../services/api';
 
 interface BusquedaOrdenProps {
-  onBuscar: (codigo: string) => void;
+  onBuscar: (orden: OrdenProduccion) => void;
 }
 
 export function BusquedaOrden({ onBuscar }: BusquedaOrdenProps) {
   const [codigo, setCodigo] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+  const navigate = useNavigate();
 
   const handleBuscar = async () => {
-    if (codigo.trim()) {
-      onBuscar(codigo);
+    if (!codigo.trim()) {
+      alert('Por favor ingresa un código de orden');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Llamar a la API
+      const orden = await getOrdenPorCodigo(codigo);
+      // Llamar el callback para guardar la orden en el estado de App
+      onBuscar(orden);
+      // Navegar al detalle
+      navigate('/detalle');
+    } catch (err) {
+      console.error('Error al buscar orden:', err);
+      alert('No se encontró la orden. Verifica el código e intenta nuevamente.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -47,17 +67,19 @@ export function BusquedaOrden({ onBuscar }: BusquedaOrdenProps) {
           />
           <button
             onClick={handleBuscar}
+            disabled={loading}
             style={{
               padding: '10px 20px',
               fontSize: '16px',
-              backgroundColor: '#007bff',
+              backgroundColor: loading ? '#6c757d' : '#007bff',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
-              cursor: 'pointer'
+              cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.7 : 1
             }}
           >
-            Buscar
+            {loading ? 'Buscando...' : 'Buscar'}
           </button>
         </div>
       </div>
