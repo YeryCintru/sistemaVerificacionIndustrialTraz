@@ -1,14 +1,34 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { login } from '../services/api';
 
 export function Login() {
   const [usuario, setUsuario] = useState('');
   const [contraseña, setContraseña] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  const handleEntrar = (e: React.FormEvent) => {
+  const handleEntrar = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Usuario:', usuario);
-    console.log('Contraseña:', contraseña);
-    
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await login(usuario, contraseña);
+      
+      // Guardar datos del usuario en localStorage
+      localStorage.setItem('usuario', JSON.stringify(response));
+      
+      // Redirigir a la página de búsqueda de órdenes
+      navigate('/busqueda');
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || 'Error en el login. Intenta de nuevo.';
+      setError(errorMessage);
+      console.error('Error en login:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -34,6 +54,20 @@ export function Login() {
         }}>
           Iniciar Sesión
         </h1>
+
+        {error && (
+          <div style={{
+            backgroundColor: '#f8d7da',
+            border: '1px solid #f5c6cb',
+            color: '#721c24',
+            padding: '12px',
+            borderRadius: '4px',
+            marginBottom: '20px',
+            fontSize: '14px'
+          }}>
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleEntrar}>
           <div style={{ marginBottom: '20px' }}>
@@ -92,22 +126,24 @@ export function Login() {
 
           <button
             type="submit"
+            disabled={loading}
             style={{
               width: '100%',
               padding: '12px',
-              backgroundColor: '#007bff',
+              backgroundColor: loading ? '#6c757d' : '#007bff',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
               fontSize: '16px',
               fontWeight: 'bold',
-              cursor: 'pointer',
-              transition: 'background-color 0.3s'
+              cursor: loading ? 'not-allowed' : 'pointer',
+              transition: 'background-color 0.3s',
+              opacity: loading ? 0.7 : 1
             }}
-            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#0056b3')}
-            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#007bff')}
+            onMouseOver={(e) => !loading && (e.currentTarget.style.backgroundColor = '#0056b3')}
+            onMouseOut={(e) => !loading && (e.currentTarget.style.backgroundColor = '#007bff')}
           >
-            Entrar
+            {loading ? 'Verificando...' : 'Entrar'}
           </button>
         </form>
       </div>
