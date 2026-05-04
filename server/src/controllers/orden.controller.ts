@@ -14,6 +14,7 @@ export class OrdenController {
         this.ordenRouter.get('/:id', this.getById.bind(this));
         this.ordenRouter.post('/', this.create.bind(this));
         this.ordenRouter.put('/:id', this.update.bind(this));
+        this.ordenRouter.patch('/:id/estado', this.updateEstado.bind(this));
         this.ordenRouter.delete('/:id', this.delete.bind(this));
     }
 
@@ -115,6 +116,33 @@ export class OrdenController {
             } else {
                 console.error('Error al actualizar orden:', error);
                 res.status(400).json({ error: 'Error al actualizar orden' });
+            }
+        }
+    }
+
+    /**
+     * PATCH /:id/estado
+     * Actualiza únicamente el estado de una orden.
+     */
+    async updateEstado(req: Request, res: Response): Promise<void> {
+        try {
+            const id = Number(req.params.id);
+            const { estado_ordenProd } = req.body;
+
+            if (!estado_ordenProd) {
+                res.status(400).json({ error: 'El campo estado_ordenProd es obligatorio' });
+                return;
+            }
+
+            const updatedOrden = await this.ordenService.updateEstado(id, estado_ordenProd);
+            res.status(200).json(updatedOrden);
+        } catch (error) {
+            const msg = (error as Error).message;
+            if (msg === 'OrdenNotFound') {
+                res.status(404).json({ error: 'Orden no encontrada' });
+            } else {
+                console.error('Error al actualizar el estado de la orden:', error);
+                res.status(400).json({ error: 'Error al actualizar el estado de la orden' });
             }
         }
     }

@@ -6,12 +6,12 @@ import { OrdenProduccion, OrdenCreation } from '../models/ordenes.model';
 
 @Service()
 export class OrdenService {
-    
+
     constructor(
         private readonly ordenRepository: OrdenRepository,
         private readonly productoRepository: ProductoRepository,
         private readonly auditService: AuditService
-    ) {}
+    ) { }
 
     /**
      * Obtiene el listado de todas las órdenes.
@@ -72,7 +72,6 @@ export class OrdenService {
 
         //Crear la orden
         const id = await this.ordenRepository.create(data);
-        
         const newOrden = await this.ordenRepository.findById(id);
         if (!newOrden) {
             throw new Error('No se pudo recuperar la orden creada');
@@ -125,6 +124,49 @@ export class OrdenService {
         });
 
         return updatedOrden;
+    }
+
+    /**
+     * Actualiza únicamente el estado de una orden de producción.
+     * Aplica lógica de negocio: si el estado es 'Cerrada' fija la fecha de cierre.
+     * @param id ID de la orden.
+     * @param estado_ordenProd Nuevo estado.
+     */
+    async updateEstado(id: number, estado_ordenProd: string): Promise<any> {
+        // Verificar que la orden existe antes de intentar modificarla
+        const ordenExistente = await this.ordenRepository.findById(id);
+        if (!ordenExistente) {
+            throw new Error('OrdenNotFound');
+        }
+
+        // Si está cerrada no se puede modificar nada mas
+        if (ordenExistente.Estado_ordenProd === 'Cerrada' && estado_ordenProd !== 'Cerrada') {
+            throw new Error('OrdenYaCerrada');
+        }
+
+        // Lógica de negocio: al cerrar la orden se registra la fecha de cierre
+        const dataToUpdate: Record<string, any> = { Estado_ordenProd: estado_ordenProd };
+        if (estado_ordenProd === 'Cerrada' && !ordenExistente.FechaCierre_ordenProd) {
+            dataToUpdate.FechaCierre_ordenProd = new Date();
+        }
+
+        // Persistir el cambio y verificar que se aplicó correctamente
+        const updated = await this.ordenRepository.update(id, dataToUpdate);
+        if (!updated) {
+            throw new Error('InternalError');
+        }
+
+        // Obtener el objeto actualizado para devolverlo (no el viejo)
+        const ordenActualizada = await this.ordenRepository.findById(id);
+
+        await this.auditService.logAction({
+            accion_log: 'Actualizar estado orden',
+            resultado_log: 'Éxito',
+            comentarios_log: `ID: ${id}, Estado anterior: ${ordenExistente.Estado_ordenProd},  Nuevo: ${estado_ordenProd}`,
+            id_ordenProd: id
+        });
+
+        return ordenActualizada;
     }
 
     /**
