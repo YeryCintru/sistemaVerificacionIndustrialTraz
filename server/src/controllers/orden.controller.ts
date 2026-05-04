@@ -15,6 +15,7 @@ export class OrdenController {
         this.ordenRouter.post('/', this.create.bind(this));
         this.ordenRouter.put('/:id', this.update.bind(this));
         this.ordenRouter.patch('/:id/estado', this.updateEstado.bind(this));
+        this.ordenRouter.patch('/:id/cantidad', this.updateCantidadTotal.bind(this));
         this.ordenRouter.delete('/:id', this.delete.bind(this));
     }
 
@@ -143,6 +144,35 @@ export class OrdenController {
             } else {
                 console.error('Error al actualizar el estado de la orden:', error);
                 res.status(400).json({ error: 'Error al actualizar el estado de la orden' });
+            }
+        }
+    }
+
+    /**
+     * PATCH /:id/cantidad
+     * Actualiza la cantidad total de una orden.
+     */
+    async updateCantidadTotal(req: Request, res: Response): Promise<void> {
+        try {
+            const id = Number(req.params.id);
+            const { cantidad_ordenProd } = req.body;
+
+            if (cantidad_ordenProd === undefined) {
+                res.status(400).json({ error: 'El campo cantidad_ordenProd es obligatorio' });
+                return;
+            }
+
+            const updatedOrden = await this.ordenService.updateCantidadTotal(id, Number(cantidad_ordenProd));
+            res.status(200).json(updatedOrden);
+        } catch (error) {
+            const msg = (error as Error).message;
+            if (msg === 'OrdenNotFound') {
+                res.status(404).json({ error: 'Orden no encontrada' });
+            } else if (msg === 'OrdenYaCerrada') {
+                res.status(400).json({ error: 'No se puede modificar una orden cerrada' });
+            } else {
+                console.error('Error al actualizar la cantidad de la orden:', error);
+                res.status(400).json({ error: 'Error al actualizar la cantidad de la orden' });
             }
         }
     }

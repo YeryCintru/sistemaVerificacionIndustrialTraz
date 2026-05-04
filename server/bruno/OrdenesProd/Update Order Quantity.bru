@@ -1,0 +1,17 @@
+meta {
+  name: Update Order Quantity
+  type: http
+  seq: 18
+}
+
+patch {
+  url: http://localhost:3000/api/ordenesprod/1/cantidad
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "cantidad_ordenProd": 500
+  }
+}

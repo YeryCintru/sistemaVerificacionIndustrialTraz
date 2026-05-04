@@ -170,6 +170,41 @@ export class OrdenService {
     }
 
     /**
+     * Actualiza la cantidad total de una orden de producción.
+     * @param id ID de la orden.
+     * @param cantidadTotal Nueva cantidad total.
+     */
+    async updateCantidadTotal(id: number, cantidadTotal: number): Promise<any> {
+        const ordenExistente = await this.ordenRepository.findById(id);
+        if (!ordenExistente) {
+            throw new Error('OrdenNotFound');
+        }
+
+        if (ordenExistente.Estado_ordenProd === 'Cerrada') {
+            throw new Error('OrdenYaCerrada');
+        }
+
+
+        const dataToUpdate: Record<string, any> = { Cantidad_ordenProd: cantidadTotal };
+
+        const updated = await this.ordenRepository.update(id, dataToUpdate);
+        if (!updated) {
+            throw new Error('InternalError');
+        }
+
+        const ordenActualizada = await this.ordenRepository.findById(id);
+
+        await this.auditService.logAction({
+            accion_log: 'Actualizar cantidad orden',
+            resultado_log: 'Éxito',
+            comentarios_log: `ID: ${id}, Cantidad anterior: ${ordenExistente.Cantidad_ordenProd}, Nueva: ${cantidadTotal}`,
+            id_ordenProd: id
+        });
+
+        return ordenActualizada;
+    }
+
+    /**
      * Elimina una orden de producción.
      * @param id ID de la orden.
      */
