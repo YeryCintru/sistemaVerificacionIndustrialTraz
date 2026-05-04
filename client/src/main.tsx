@@ -4,6 +4,7 @@ import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { getOrdenPorCodigo, OrdenProduccion } from './services/api';
 import { BusquedaOrden } from './pages/BusquedaOrden';
 import { DetalleOrden } from './pages/DetalleOrden';
+import { Verificacion } from './pages/Verificacion';
 import { Login } from './pages/Login';
 
 function App() {
@@ -31,7 +32,7 @@ function App() {
         {/* Ruta de Búsqueda y Detalle - Comparten el estado */}
         <Route path="/busqueda" element={<BusquedaOrden onBuscar={handleBuscar} />} />
         <Route path="/detalle" element={ordenActual ? <DetalleOrden orden={ordenActual} onVolver={handleVolver} /> : <Navigate to="/busqueda" />} />
-
+        <Route path="/verificacion" element={ordenActual ? <Verificacion orden={ordenActual} onVolver={handleVolver} /> : <Navigate to="/busqueda" />} />
         {/* Rutas por defecto - Redirigen al login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/login" replace />} />

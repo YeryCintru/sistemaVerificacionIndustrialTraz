@@ -1,5 +1,6 @@
 import React from 'react';
 import { OrdenProduccion } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 interface DetalleOrdenProps {
   orden: OrdenProduccion;
@@ -7,6 +8,12 @@ interface DetalleOrdenProps {
 }
 
 export function DetalleOrden({ orden, onVolver }: DetalleOrdenProps) {
+  const navigate = useNavigate();
+
+  const handleVerificarPieza = () => {
+    navigate('/verificacion');
+  };
+
   return (
     <div style={{
       padding: '20px',
@@ -107,6 +114,22 @@ export function DetalleOrden({ orden, onVolver }: DetalleOrdenProps) {
             </label>
             <p style={{ margin: 0, color: '#555' }}>{orden.Comentarios_ordenProd || '-'}</p>
           </div>
+
+          <button
+            onClick={handleVerificarPieza}
+            style={{
+              padding: '10px 20px',
+              fontSize: '16px',
+              backgroundColor: '#28a745',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              marginTop: '20px'
+            }}
+          >
+            Verificar Pieza
+          </button>
         </div>
       </div>
     </div>
