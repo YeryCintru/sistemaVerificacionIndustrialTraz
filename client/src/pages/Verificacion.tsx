@@ -11,13 +11,15 @@ export function Verificacion({ orden }: VerificacionProps) {
   const [comentarios, setComentarios] = React.useState('');
   const navigate = useNavigate();
 
-  const handleVerificar = async () => {
+  const handleVerificar = async (res: string) => {
     try {
-      await verificarOrden(orden.Id_ordenProd!, resultado, 1, comentarios);
+      setResultado(res);
+      await verificarOrden(orden.Id_ordenProd!, res, 1, comentarios);
       alert('Orden verificada correctamente');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al verificar orden:', error);
-      alert('Error al verificar orden');
+      const msg = error.response?.data?.error || 'Error al verificar orden';
+      alert(msg);
     }
   };
 
@@ -91,7 +93,7 @@ export function Verificacion({ orden }: VerificacionProps) {
         <h3 style={{ fontSize: '28px', color: '#333', marginBottom: '40px' }}>¿La pieza es correcta?</h3>
         <div style={{ display: 'flex', gap: '40px' }}>
           <button
-            onClick={() => { setResultado('Correcto'); handleVerificar(); }}
+            onClick={() => handleVerificar('Correcto')}
             style={{
               padding: '30px 80px',
               fontSize: '32px',
@@ -107,7 +109,7 @@ export function Verificacion({ orden }: VerificacionProps) {
           </button>
 
           <button
-            onClick={() => { setResultado('Incorrecto'); handleVerificar(); }}
+            onClick={() => handleVerificar('Incorrecto')}
             style={{
               padding: '30px 80px',
               fontSize: '32px',
