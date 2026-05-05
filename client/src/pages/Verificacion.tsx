@@ -1,5 +1,5 @@
 import React from 'react';
-import { OrdenProduccion } from '../services/api';
+import { OrdenProduccion, verificarOrden } from '../services/api';
 
 interface VerificacionProps {
   orden: OrdenProduccion;
@@ -7,6 +7,19 @@ interface VerificacionProps {
 }
 
 export function Verificacion({ orden, onVolver }: VerificacionProps) {
+  const [resultado, setResultado] = React.useState('');
+  const [comentarios, setComentarios] = React.useState('');
+
+  const handleVerificar = async () => {
+    try {
+      await verificarOrden(orden.Id_ordenProd!, resultado, 1, comentarios);
+      alert('Orden verificada correctamente');
+    } catch (error) {
+      console.error('Error al verificar orden:', error);
+      alert('Error al verificar orden');
+    }
+  };
+
   return (
     <div style={{
       fontFamily: 'Segoe UI, sans-serif',
@@ -72,31 +85,35 @@ export function Verificacion({ orden, onVolver }: VerificacionProps) {
       }}>
         <h3 style={{ fontSize: '28px', color: '#333', marginBottom: '40px' }}>¿La pieza es correcta?</h3>
         <div style={{ display: 'flex', gap: '40px' }}>
-          <button style={{
-            padding: '30px 80px',
-            fontSize: '32px',
-            fontWeight: 'bold',
-            backgroundColor: '#28a745',
-            color: 'white',
-            border: 'none',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            boxShadow: '0 6px 16px rgba(40, 167, 69, 0.4)'
-          }}>
+          <button
+            onClick={() => { setResultado('Correcto'); handleVerificar(); }}
+            style={{
+              padding: '30px 80px',
+              fontSize: '32px',
+              fontWeight: 'bold',
+              backgroundColor: '#28a745',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              boxShadow: '0 6px 16px rgba(40, 167, 69, 0.4)'
+            }}>
             SÍ
           </button>
 
-          <button style={{
-            padding: '30px 80px',
-            fontSize: '32px',
-            fontWeight: 'bold',
-            backgroundColor: '#dc3545',
-            color: 'white',
-            border: 'none',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            boxShadow: '0 6px 16px rgba(220, 53, 69, 0.4)'
-          }}>
+          <button
+            onClick={() => { setResultado('Incorrecto'); handleVerificar(); }}
+            style={{
+              padding: '30px 80px',
+              fontSize: '32px',
+              fontWeight: 'bold',
+              backgroundColor: '#dc3545',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              boxShadow: '0 6px 16px rgba(220, 53, 69, 0.4)'
+            }}>
             NO
           </button>
         </div>

@@ -36,3 +36,14 @@ export async function getOrdenPorCodigo(codigoOrden: string): Promise<OrdenProdu
   console.log('Orden filtrada por código:', response.data);
   return response.data;
 }
+
+export async function verificarOrden(id: number, resultado: string, idOperario: number, comentarios: string): Promise<OrdenProduccion> {
+  const response = await axios.post<OrdenProduccion>(`${BASE_URL}/api/ordenesprod/${id}/verificar`, {
+    resultado,
+    idOperario,
+    comentarios
+  });
+  console.log('Orden verificada:', response.data);
+  return response.data;
+}
+
