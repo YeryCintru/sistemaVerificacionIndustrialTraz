@@ -32,7 +32,7 @@ function App() {
         {/* Ruta de Búsqueda y Detalle - Comparten el estado */}
         <Route path="/busqueda" element={<BusquedaOrden onBuscar={handleBuscar} />} />
         <Route path="/detalle" element={ordenActual ? <DetalleOrden orden={ordenActual} onVolver={handleVolver} /> : <Navigate to="/busqueda" />} />
-        <Route path="/verificacion" element={ordenActual ? <Verificacion orden={ordenActual} onVolver={handleVolver} /> : <Navigate to="/busqueda" />} />
+        <Route path="/verificacion" element={ordenActual ? <Verificacion orden={ordenActual} /> : <Navigate to="/busqueda" />} />
         {/* Rutas por defecto - Redirigen al login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/login" replace />} />

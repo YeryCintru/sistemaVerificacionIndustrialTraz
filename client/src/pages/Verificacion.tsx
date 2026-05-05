@@ -1,14 +1,15 @@
 import React from 'react';
 import { OrdenProduccion, verificarOrden } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 interface VerificacionProps {
   orden: OrdenProduccion;
-  onVolver: () => void;
 }
 
-export function Verificacion({ orden, onVolver }: VerificacionProps) {
+export function Verificacion({ orden }: VerificacionProps) {
   const [resultado, setResultado] = React.useState('');
   const [comentarios, setComentarios] = React.useState('');
+  const navigate = useNavigate();
 
   const handleVerificar = async () => {
     try {
@@ -18,6 +19,10 @@ export function Verificacion({ orden, onVolver }: VerificacionProps) {
       console.error('Error al verificar orden:', error);
       alert('Error al verificar orden');
     }
+  };
+
+  const handleVolverDetalle = () => {
+    navigate('/detalle');
   };
 
   return (
@@ -39,7 +44,7 @@ export function Verificacion({ orden, onVolver }: VerificacionProps) {
         position: 'relative'
       }}>
         <button
-          onClick={onVolver}
+          onClick={handleVolverDetalle}
           style={{
             position: 'absolute',
             top: '20px',
