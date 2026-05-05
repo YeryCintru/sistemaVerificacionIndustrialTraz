@@ -205,6 +205,55 @@ export class OrdenService {
     }
 
     /**
+     * Registra el resultado de una verificación para una orden de producción.
+     * @param id ID de la orden.
+     * @param resultado Resultado de la verificación ('Correcto' o 'Incorrecto').
+     * @param idOperario ID del operario que verifica.
+     * @param comentarios Comentarios adicionales.
+     */
+    async verificarOrden(id: number, resultado: string, idOperario?: number, comentarios?: string): Promise<any> {
+        const ordenExistente = await this.ordenRepository.findById(id);
+        if (!ordenExistente) {
+            throw new Error('OrdenNotFound');
+        }
+
+        // Si esta cerrada no se puede verificar
+        if (ordenExistente.Estado_ordenProd === 'Cerrada') {
+            throw new Error('OrdenYaCerrada');
+        }
+
+        // Si esta pendiente no se puede verificar
+        if (ordenExistente.Estado_ordenProd === 'Pendiente') {
+            throw new Error('OrdenPendiente');
+        }
+
+        const numeroPieza = (ordenExistente.CantidadCompletada_ordenProd || 0) + 1;
+        let ordenActualizada = ordenExistente;
+
+        if (resultado === 'Correcto') {
+            // Incrementar cantidad
+            await this.ordenRepository.incrementCantidadCompletada(id);
+            ordenActualizada = await this.ordenRepository.findById(id);
+
+            // Verificar si se ha completado la orden
+            if (ordenActualizada.CantidadCompletada_ordenProd >= ordenActualizada.Cantidad_ordenProd) {
+                throw new Error('CantidadCompletaOrden');
+            }
+        }
+
+        // Registrar en auditoría usando la nueva función para el comentario
+        await this.auditService.logAction({
+            accion_log: 'Verificación de pieza',
+            resultado_log: resultado,
+            comentarios_log: comentarios || this.formatearComentarioVerificacion(numeroPieza, resultado),
+            id_operario: idOperario,
+            id_ordenProd: id
+        });
+
+        return ordenActualizada;
+    }
+
+    /**
      * Elimina una orden de producción.
      * @param id ID de la orden.
      */
@@ -213,5 +262,13 @@ export class OrdenService {
         if (!deleted) {
             throw new Error('OrdenNotFound');
         }
+    }
+
+    /**
+     * Genera un comentario estandarizado para el log de verificación.
+     */
+    private formatearComentarioVerificacion(numero: number, resultado: string): string {
+        const accion = resultado === 'Correcto' ? 'Verificada' : 'Rechazada';
+        return `${accion} pieza nº ${numero}. Resultado: ${resultado}`;
     }
 }

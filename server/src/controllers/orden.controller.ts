@@ -16,6 +16,7 @@ export class OrdenController {
         this.ordenRouter.put('/:id', this.update.bind(this));
         this.ordenRouter.patch('/:id/estado', this.updateEstado.bind(this));
         this.ordenRouter.patch('/:id/cantidad', this.updateCantidadTotal.bind(this));
+        this.ordenRouter.post('/:id/verificar', this.verificar.bind(this));
         this.ordenRouter.delete('/:id', this.delete.bind(this));
     }
 
@@ -173,6 +174,35 @@ export class OrdenController {
             } else {
                 console.error('Error al actualizar la cantidad de la orden:', error);
                 res.status(400).json({ error: 'Error al actualizar la cantidad de la orden' });
+            }
+        }
+    }
+
+    /**
+     * POST /:id/verificar
+     * Registra una verificación de pieza.
+     */
+    async verificar(req: Request, res: Response): Promise<void> {
+        try {
+            const id = Number(req.params.id);
+            const { resultado, idOperario, comentarios } = req.body;
+
+            if (!resultado) {
+                res.status(400).json({ error: 'El campo resultado es obligatorio' });
+                return;
+            }
+
+            const updatedOrden = await this.ordenService.verificarOrden(id, resultado, idOperario, comentarios);
+            res.status(200).json(updatedOrden);
+        } catch (error) {
+            const msg = (error as Error).message;
+            if (msg === 'OrdenNotFound') {
+                res.status(404).json({ error: 'Orden no encontrada' });
+            } else if (msg === 'OrdenYaCerrada') {
+                res.status(400).json({ error: 'No se puede verificar una orden cerrada' });
+            } else {
+                console.error('Error al realizar la verificación:', error);
+                res.status(400).json({ error: 'Error al realizar la verificación' });
             }
         }
     }
