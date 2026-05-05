@@ -1,0 +1,19 @@
+meta {
+  name: Verify Order Piece
+  type: http
+  seq: 19
+}
+
+post {
+  url: http://localhost:3000/api/ordenesprod/1/verificar
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "resultado": "Correcto",
+    "idOperario": 1,
+    "comentarios": ""
+  }
+}

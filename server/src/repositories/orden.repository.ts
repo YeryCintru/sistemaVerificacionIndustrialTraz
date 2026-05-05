@@ -115,6 +115,19 @@ export class OrdenRepository {
     }
 
     /**
+     * Incrementa la cantidad completada de una orden de producción.
+     * @param id ID de la orden.
+     * @returns Boolean indicando si se modificó alguna fila.
+     */
+    async incrementCantidadCompletada(id: number): Promise<boolean> {
+        const [result] = await pool.query<ResultSetHeader>(
+            'UPDATE Orden_produccion SET CantidadCompletada_ordenProd = CantidadCompletada_ordenProd + 1 WHERE Id_ordenProd = ?',
+            [id]
+        );
+        return result.affectedRows > 0;
+    }
+
+    /**
      * Elimina una orden de producción por su ID.
      * @param id ID de la orden.
      * @returns Boolean indicando si se eliminó alguna fila.

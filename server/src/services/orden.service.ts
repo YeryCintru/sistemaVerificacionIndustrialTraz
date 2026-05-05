@@ -6,12 +6,12 @@ import { OrdenProduccion, OrdenCreation } from '../models/ordenes.model';
 
 @Service()
 export class OrdenService {
-    
+
     constructor(
         private readonly ordenRepository: OrdenRepository,
         private readonly productoRepository: ProductoRepository,
         private readonly auditService: AuditService
-    ) {}
+    ) { }
 
     /**
      * Obtiene el listado de todas las órdenes.
@@ -72,7 +72,6 @@ export class OrdenService {
 
         //Crear la orden
         const id = await this.ordenRepository.create(data);
-        
         const newOrden = await this.ordenRepository.findById(id);
         if (!newOrden) {
             throw new Error('No se pudo recuperar la orden creada');
@@ -128,6 +127,133 @@ export class OrdenService {
     }
 
     /**
+     * Actualiza únicamente el estado de una orden de producción.
+     * Aplica lógica de negocio: si el estado es 'Cerrada' fija la fecha de cierre.
+     * @param id ID de la orden.
+     * @param estado_ordenProd Nuevo estado.
+     */
+    async updateEstado(id: number, estado_ordenProd: string): Promise<any> {
+        // Verificar que la orden existe antes de intentar modificarla
+        const ordenExistente = await this.ordenRepository.findById(id);
+        if (!ordenExistente) {
+            throw new Error('OrdenNotFound');
+        }
+
+        // Si está cerrada no se puede modificar nada mas
+        if (ordenExistente.Estado_ordenProd === 'Cerrada' && estado_ordenProd !== 'Cerrada') {
+            throw new Error('OrdenYaCerrada');
+        }
+
+        // Lógica de negocio: al cerrar la orden se registra la fecha de cierre
+        const dataToUpdate: Record<string, any> = { Estado_ordenProd: estado_ordenProd };
+        if (estado_ordenProd === 'Cerrada' && !ordenExistente.FechaCierre_ordenProd) {
+            dataToUpdate.FechaCierre_ordenProd = new Date();
+        }
+
+        // Persistir el cambio y verificar que se aplicó correctamente
+        const updated = await this.ordenRepository.update(id, dataToUpdate);
+        if (!updated) {
+            throw new Error('InternalError');
+        }
+
+        // Obtener el objeto actualizado para devolverlo (no el viejo)
+        const ordenActualizada = await this.ordenRepository.findById(id);
+
+        await this.auditService.logAction({
+            accion_log: 'Actualizar estado orden',
+            resultado_log: 'Éxito',
+            comentarios_log: `ID: ${id}, Estado anterior: ${ordenExistente.Estado_ordenProd},  Nuevo: ${estado_ordenProd}`,
+            id_ordenProd: id
+        });
+
+        return ordenActualizada;
+    }
+
+    /**
+     * Actualiza la cantidad total de una orden de producción.
+     * @param id ID de la orden.
+     * @param cantidadTotal Nueva cantidad total.
+     */
+    async updateCantidadTotal(id: number, cantidadTotal: number): Promise<any> {
+        const ordenExistente = await this.ordenRepository.findById(id);
+        if (!ordenExistente) {
+            throw new Error('OrdenNotFound');
+        }
+
+        if (ordenExistente.Estado_ordenProd === 'Cerrada') {
+            throw new Error('OrdenYaCerrada');
+        }
+
+
+        const dataToUpdate: Record<string, any> = { Cantidad_ordenProd: cantidadTotal };
+
+        const updated = await this.ordenRepository.update(id, dataToUpdate);
+        if (!updated) {
+            throw new Error('InternalError');
+        }
+
+        const ordenActualizada = await this.ordenRepository.findById(id);
+
+        await this.auditService.logAction({
+            accion_log: 'Actualizar cantidad orden',
+            resultado_log: 'Éxito',
+            comentarios_log: `ID: ${id}, Cantidad anterior: ${ordenExistente.Cantidad_ordenProd}, Nueva: ${cantidadTotal}`,
+            id_ordenProd: id
+        });
+
+        return ordenActualizada;
+    }
+
+    /**
+     * Registra el resultado de una verificación para una orden de producción.
+     * @param id ID de la orden.
+     * @param resultado Resultado de la verificación ('Correcto' o 'Incorrecto').
+     * @param idOperario ID del operario que verifica.
+     * @param comentarios Comentarios adicionales.
+     */
+    async verificarOrden(id: number, resultado: string, idOperario?: number, comentarios?: string): Promise<any> {
+        const ordenExistente = await this.ordenRepository.findById(id);
+        if (!ordenExistente) {
+            throw new Error('OrdenNotFound');
+        }
+
+        // Si esta cerrada no se puede verificar
+        if (ordenExistente.Estado_ordenProd === 'Cerrada') {
+            throw new Error('OrdenYaCerrada');
+        }
+
+        // Si esta pendiente no se puede verificar
+        if (ordenExistente.Estado_ordenProd === 'Pendiente') {
+            throw new Error('OrdenPendiente');
+        }
+
+        const numeroPieza = (ordenExistente.CantidadCompletada_ordenProd || 0) + 1;
+        let ordenActualizada = ordenExistente;
+
+        if (resultado === 'Correcto') {
+            // Incrementar cantidad
+            await this.ordenRepository.incrementCantidadCompletada(id);
+            ordenActualizada = await this.ordenRepository.findById(id);
+
+            // Verificar si se ha completado la orden
+            if (ordenActualizada.CantidadCompletada_ordenProd >= ordenActualizada.Cantidad_ordenProd) {
+                throw new Error('CantidadCompletaOrden');
+            }
+        }
+
+        // Registrar en auditoría usando la nueva función para el comentario
+        await this.auditService.logAction({
+            accion_log: 'Verificación de pieza',
+            resultado_log: resultado,
+            comentarios_log: comentarios || this.formatearComentarioVerificacion(numeroPieza, resultado),
+            id_operario: idOperario,
+            id_ordenProd: id
+        });
+
+        return ordenActualizada;
+    }
+
+    /**
      * Elimina una orden de producción.
      * @param id ID de la orden.
      */
@@ -136,5 +262,13 @@ export class OrdenService {
         if (!deleted) {
             throw new Error('OrdenNotFound');
         }
+    }
+
+    /**
+     * Genera un comentario estandarizado para el log de verificación.
+     */
+    private formatearComentarioVerificacion(numero: number, resultado: string): string {
+        const accion = resultado === 'Correcto' ? 'Verificada' : 'Rechazada';
+        return `${accion} pieza nº ${numero}. Resultado: ${resultado}`;
     }
 }
