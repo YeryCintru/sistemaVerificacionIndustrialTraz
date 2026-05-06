@@ -10,6 +10,7 @@ export class ProductoController {
         private readonly productoService: ProductoService
     ) {
         this.productoRouter.get('/', this.getAll.bind(this));
+        this.productoRouter.get('/:id', this.getById.bind(this));
         this.productoRouter.post('/', this.create.bind(this));
         this.productoRouter.put('/:id', this.update.bind(this));
         this.productoRouter.delete('/:id', this.delete.bind(this));
@@ -72,6 +73,25 @@ export class ProductoController {
             } else {
                 console.error('Error al actualizar producto:', error);
                 res.status(400).json({ error: 'Error al actualizar producto' });
+            }
+        }
+    }
+
+    /**
+     * Endpoint GET /:id
+     * Obtiene un producto por su ID.
+     */
+    async getById(req: Request, res: Response): Promise<void> {
+        try {
+            const id = Number(req.params.id);
+            const producto = await this.productoService.getById(id);
+            res.status(200).json(producto);
+        } catch (error) {
+            if ((error as Error).message === 'ProductoNotFound') {
+                res.status(404).json({ error: 'Producto no encontrado' });
+            } else {
+                console.error('Error al obtener producto:', error);
+                res.status(400).json({ error: 'Error al obtener producto' });
             }
         }
     }
