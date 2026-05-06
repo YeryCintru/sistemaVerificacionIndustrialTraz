@@ -20,6 +20,19 @@ export interface OrdenProduccion {
   Nombre_producto: string;
 }
 
+/**
+ * Interfaz principal que representa un Producto.
+ */
+export interface Producto {
+  Id_producto?: number;
+  Codigo_producto: string;
+  Nombre_producto: string;
+  Estado_producto: string;
+  Verificador_producto?: string;
+  FechaCreacion_producto?: Date;
+  Documentacion_producto?: string;
+}
+
 export async function login(Nombre_operario: string, Clave_operario: string): Promise<any> {
   const response = await axios.post(`${BASE_URL}/api/operarios/auth/login`, {
     Nombre_operario,
@@ -47,3 +60,7 @@ export async function verificarOrden(id: number, resultado: string, idOperario: 
   return response.data;
 }
 
+export async function getProducto(id: number): Promise<Producto> {
+  const response = await axios.get<Producto>(`${BASE_URL}/api/productos/${id}`);
+  return response.data;
+}

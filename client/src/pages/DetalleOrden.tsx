@@ -2,6 +2,7 @@ import React from 'react';
 import { OrdenProduccion } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { BotonLogout } from '../components/BotonLogout';
+import { getProducto } from '../services/api';
 
 interface DetalleOrdenProps {
   orden: OrdenProduccion;
@@ -158,6 +159,7 @@ export function DetalleOrden({ orden, onVolver }: DetalleOrdenProps) {
           </div>
 
           <button
+            onClick={() => getProducto(orden.Id_producto)}
             style={{
               padding: '12px 20px',
               fontSize: '16px',
