@@ -20,6 +20,19 @@ export class ProductoService {
     }
 
     /**
+     * Obtiene un producto por su ID.
+     * @param id ID del producto.
+     * @returns Producto encontrado.
+     */
+    async getById(id: number): Promise<Producto> {
+        const producto = await this.productoRepository.findById(id);
+        if (!producto) {
+            throw new Error('ProductoNotFound');
+        }
+        return producto;
+    }
+
+    /**
      * Lógica de negocio para crear un nuevo producto.
      * @param data Datos del producto.
      * @returns Producto recién creado.
