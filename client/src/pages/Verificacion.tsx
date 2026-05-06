@@ -1,6 +1,7 @@
 import React from 'react';
 import { OrdenProduccion, verificarOrden } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import { BotonLogout } from '../components/BotonLogout';
 
 interface VerificacionProps {
   orden: OrdenProduccion;
@@ -125,6 +126,7 @@ export function Verificacion({ orden }: VerificacionProps) {
           </button>
         </div>
       </div>
+      <BotonLogout />
     </div>
   );
 }

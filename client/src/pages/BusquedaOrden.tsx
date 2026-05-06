@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getOrdenPorCodigo, OrdenProduccion } from '../services/api';
+import { BotonLogout } from '../components/BotonLogout';
 
 interface BusquedaOrdenProps {
   onBuscar: (orden: OrdenProduccion) => void;
@@ -83,6 +84,7 @@ export function BusquedaOrden({ onBuscar }: BusquedaOrdenProps) {
           </button>
         </div>
       </div>
+      <BotonLogout />
     </div>
   );
 }
