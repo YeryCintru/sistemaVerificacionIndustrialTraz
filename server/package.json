@@ -27,6 +27,7 @@
     "express-session": "^1.17.3",
     "mysql2": "^3.6.5",
     "reflect-metadata": "^0.2.1",
+    "socket.io": "^4.8.3",
     "typedi": "^0.10.0"
   },
   "devDependencies": {
