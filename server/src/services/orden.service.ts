@@ -2,6 +2,7 @@ import { Service } from 'typedi';
 import { OrdenRepository } from '../repositories/orden.repository';
 import { ProductoRepository } from '../repositories/producto.repository';
 import { AuditService } from './audit.service';
+import { SocketService } from './socket.service';
 import { OrdenProduccion, OrdenCreation } from '../models/ordenes.model';
 
 @Service()
@@ -10,7 +11,8 @@ export class OrdenService {
     constructor(
         private readonly ordenRepository: OrdenRepository,
         private readonly productoRepository: ProductoRepository,
-        private readonly auditService: AuditService
+        private readonly auditService: AuditService,
+        private readonly socketService: SocketService
     ) { }
 
     /**
@@ -249,6 +251,9 @@ export class OrdenService {
             id_operario: idOperario,
             id_ordenProd: id
         });
+
+        // Notificar a través de WebSockets
+        this.socketService.emit('ordenActualizada', ordenActualizada);
 
         return ordenActualizada;
     }
