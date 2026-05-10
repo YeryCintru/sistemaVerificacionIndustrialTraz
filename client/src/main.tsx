@@ -30,6 +30,8 @@ function App() {
   const handleBuscar = async (orden: OrdenProduccion) => {
     try {
       setOrdenActual(orden);
+      // Unirse a la sala de esta orden en el servidor
+      socket.emit('join_order', orden.Id_ordenProd);
     } catch (err) {
       console.error('Error al buscar orden:', err);
       alert('No se encontró la orden. Verifica el código e intenta nuevamente.');
@@ -37,6 +39,10 @@ function App() {
   };
 
   const handleVolver = () => {
+    if (ordenActual) {
+      // Salir de la sala de la orden
+      socket.emit('leave_order', ordenActual.Id_ordenProd);
+    }
     setOrdenActual(null);
   };
 
