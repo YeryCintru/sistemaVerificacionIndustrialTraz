@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { OrdenProduccion } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { BotonLogout } from '../components/BotonLogout';
@@ -7,12 +7,20 @@ import { getProducto } from '../services/api';
 interface DetalleOrdenProps {
   orden: OrdenProduccion;
   onVolver: () => void;
+  setOrdenActual: (orden: OrdenProduccion | null) => void;
 }
 
-export function DetalleOrden({ orden, onVolver }: DetalleOrdenProps) {
+export function DetalleOrden({ orden, onVolver, setOrdenActual }: DetalleOrdenProps) {
   const navigate = useNavigate();
   const [productoDetalle, setProductoDetalle] = React.useState<any>(null);
   const [showModal, setShowModal] = React.useState(false);
+
+  // Reaccionar a cambios externos en la orden
+  useEffect(() => {
+    if (orden.Estado_ordenProd === 'Cerrada') {
+      alert('¡Atención! Esta orden acaba de ser cerrada.');
+    }
+  }, [orden.Estado_ordenProd]);
 
   const handleVerificarPieza = () => {
     navigate('/verificacion');

@@ -1,16 +1,25 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { OrdenProduccion, verificarOrden } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { BotonLogout } from '../components/BotonLogout';
 
 interface VerificacionProps {
   orden: OrdenProduccion;
+  setOrdenActual: (orden: OrdenProduccion | null) => void;
 }
 
-export function Verificacion({ orden }: VerificacionProps) {
+export function Verificacion({ orden, setOrdenActual }: VerificacionProps) {
   const [resultado, setResultado] = React.useState('');
   const [comentarios, setComentarios] = React.useState('');
   const navigate = useNavigate();
+
+  // Reaccionamos cuando la orden cambie (gracias al hook global en App.tsx)
+  useEffect(() => {
+    if (orden.Estado_ordenProd === 'Cerrada') {
+      alert('La orden ha sido cerrada por el servidor. Redirigiendo...');
+      navigate('/detalle');
+    }
+  }, [orden.Estado_ordenProd, navigate]);
 
   const handleVerificar = async (res: string) => {
     try {
