@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { OrdenProduccion, verificarOrden } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { BotonLogout } from '../components/BotonLogout';
@@ -12,6 +12,7 @@ export function Verificacion({ orden, setOrdenActual }: VerificacionProps) {
   const [resultado, setResultado] = React.useState('');
   const [comentarios, setComentarios] = React.useState('');
   const navigate = useNavigate();
+  const prevCantidadRef = useRef<number>(orden.Cantidad_ordenProd);
 
   // Reaccionamos cuando la orden cambie (gracias al hook global en App.tsx)
   useEffect(() => {
@@ -19,7 +20,15 @@ export function Verificacion({ orden, setOrdenActual }: VerificacionProps) {
       alert('La orden ha sido cerrada por el servidor. Redirigiendo...');
       navigate('/detalle');
     }
-  }, [orden.Estado_ordenProd, navigate]);
+    // Detectar si ha cambiado la cantidad total, guardando el estado actual antes de volver a renderizarse
+    if (prevCantidadRef.current !== undefined && prevCantidadRef.current !== orden.Cantidad_ordenProd) {
+      alert(`¡Aviso! La cantidad total de la orden ha cambiado de ${prevCantidadRef.current} a ${orden.Cantidad_ordenProd}`);
+    }
+
+    // Actualizamos la referencia con el valor actual para la próxima vez
+    prevCantidadRef.current = orden.Cantidad_ordenProd;
+
+  }, [orden.Estado_ordenProd, orden.Cantidad_ordenProd, navigate]);
 
   const handleVerificar = async (res: string) => {
     try {
