@@ -206,6 +206,9 @@ export class OrdenService {
             id_ordenProd: id
         });
 
+        // Enviar a través de WebSockets (solo a la sala de esta orden)
+        this.socketService.toRoom(`order_${id}`, 'cantidadOrdenCambiada', ordenActualizada);
+
         return ordenActualizada;
     }
 
