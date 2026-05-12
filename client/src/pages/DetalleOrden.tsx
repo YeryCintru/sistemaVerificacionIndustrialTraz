@@ -30,9 +30,17 @@ export function DetalleOrden({ orden, onVolver, setOrdenActual }: DetalleOrdenPr
       alert(`¡Aviso! La cantidad total de la orden ha cambiado de ${prevCantidadRef.current} a ${orden.Cantidad_ordenProd}`);
     }
 
+    // Usamos ?? 0 por si los valores vienen como undefined desde el servidor
+    const completada = orden.CantidadCompletada_ordenProd ?? 0;
+    const total = orden.Cantidad_ordenProd ?? 0;
+
+    if (completada >= total && total > 0) {
+      alert('¡La orden ha sido completada!');
+    }
+
     // Actualizamos la referencia con el valor actual para la próxima vez
     prevCantidadRef.current = orden.Cantidad_ordenProd;
-  }, [orden.Estado_ordenProd, orden.Cantidad_ordenProd]);
+  }, [orden.Estado_ordenProd, orden.Cantidad_ordenProd, orden.CantidadCompletada_ordenProd, navigate]);
 
   const handleVerificarPieza = () => {
     navigate('/verificacion');

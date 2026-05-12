@@ -36,6 +36,7 @@ export function useOrderSocket(orderId?: number) {
     socket.on('ordenActualizada', handleUpdate);
     socket.on('estadoOrdenActualizado', handleUpdate);
     socket.on('cantidadOrdenCambiada', handleUpdate);
+    socket.on('ordenCompletada', handleUpdate);
 
     // Si ya estábamos conectados forzamos el 'join'
     if (socket.connected) onConnect();
@@ -50,6 +51,7 @@ export function useOrderSocket(orderId?: number) {
       socket.off('ordenActualizada', handleUpdate);
       socket.off('estadoOrdenActualizado', handleUpdate);
       socket.off('cantidadOrdenCambiada', handleUpdate);
+      socket.off('ordenCompletada', handleUpdate);
     };
   }, [orderId]); // Si el orderId cambia, se reinicia este efecto
 

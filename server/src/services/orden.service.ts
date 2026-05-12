@@ -245,6 +245,8 @@ export class OrdenService {
 
             // Verificar si se ha completado la orden
             if (ordenActualizada.CantidadCompletada_ordenProd >= ordenActualizada.Cantidad_ordenProd) {
+                // Enviar a través de WebSockets (solo a la sala de esta orden)
+                this.socketService.toRoom(`order_${id}`, 'ordenCompletada', ordenActualizada);
                 throw new Error('CantidadCompletaOrden');
             }
         }
