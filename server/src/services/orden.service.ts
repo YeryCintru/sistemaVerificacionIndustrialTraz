@@ -2,6 +2,7 @@ import { Service } from 'typedi';
 import { OrdenRepository } from '../repositories/orden.repository';
 import { ProductoRepository } from '../repositories/producto.repository';
 import { AuditService } from './audit.service';
+import { SocketService } from './socket.service';
 import { OrdenProduccion, OrdenCreation } from '../models/ordenes.model';
 
 @Service()
@@ -10,7 +11,8 @@ export class OrdenService {
     constructor(
         private readonly ordenRepository: OrdenRepository,
         private readonly productoRepository: ProductoRepository,
-        private readonly auditService: AuditService
+        private readonly auditService: AuditService,
+        private readonly socketService: SocketService
     ) { }
 
     /**
@@ -166,6 +168,9 @@ export class OrdenService {
             id_ordenProd: id
         });
 
+        // Enviar a través de WebSockets (solo a la sala de esta orden)
+        this.socketService.toRoom(`order_${id}`, 'estadoOrdenActualizado', ordenActualizada);
+
         return ordenActualizada;
     }
 
@@ -200,6 +205,9 @@ export class OrdenService {
             comentarios_log: `ID: ${id}, Cantidad anterior: ${ordenExistente.Cantidad_ordenProd}, Nueva: ${cantidadTotal}`,
             id_ordenProd: id
         });
+
+        // Enviar a través de WebSockets (solo a la sala de esta orden)
+        this.socketService.toRoom(`order_${id}`, 'cantidadOrdenCambiada', ordenActualizada);
 
         return ordenActualizada;
     }
@@ -237,6 +245,8 @@ export class OrdenService {
 
             // Verificar si se ha completado la orden
             if (ordenActualizada.CantidadCompletada_ordenProd >= ordenActualizada.Cantidad_ordenProd) {
+                // Enviar a través de WebSockets (solo a la sala de esta orden)
+                this.socketService.toRoom(`order_${id}`, 'ordenCompletada', ordenActualizada);
                 throw new Error('CantidadCompletaOrden');
             }
         }
@@ -249,6 +259,9 @@ export class OrdenService {
             id_operario: idOperario,
             id_ordenProd: id
         });
+
+        // Enviar a través de WebSockets (solo a la sala de esta orden)
+        this.socketService.toRoom(`order_${id}`, 'ordenActualizada', ordenActualizada);
 
         return ordenActualizada;
     }
