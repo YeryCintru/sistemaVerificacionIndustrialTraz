@@ -1,8 +1,9 @@
 import { Service } from 'typedi';
 import { OperarioRepository } from '../repositories/operario.repository';
-import { Operario, OperarioCreation, OperarioLogin, OperarioAuthResponse } from '../models/operario.model';
+import { Operario, OperarioCreation, OperarioLogin, OperarioAuthResponse, OperarioTokenPayload } from '../models/operario.model';
 import { AuditService } from './audit.service';
 import bcrypt from 'bcrypt';
+import jwt, { SignOptions } from 'jsonwebtoken';
 
 @Service()
 export class OperarioService {
@@ -15,7 +16,7 @@ export class OperarioService {
     /**
      * Login de un operario
      * @param operarioLogin Datos de login (nombre y clave)
-     * @returns OperarioAuthResponse con los datos del operario
+     * @returns OperarioAuthResponse con JWT
      */
     async login(operarioLogin: OperarioLogin): Promise<OperarioAuthResponse> {
         if (!this.isValidLogin(operarioLogin)) {
@@ -34,6 +35,11 @@ export class OperarioService {
             throw new Error('InvalidCredentialsError');
         }
 
+        // Generar JWT token
+        const token = this.generateToken(operario);
+        const expiresInDays = Number(process.env.OPERARIO_SESSION_DAYS) || 7;
+        const expiresIn = expiresInDays * 24 * 60 * 60; // Convert days to seconds
+
         // Registrar en auditoría
         await this.auditService.logAction({
             accion_log: 'LOGIN_OPERARIO',
@@ -42,9 +48,11 @@ export class OperarioService {
         });
 
         return {
+            token,
             Id_operario: operario.Id_operario!,
             Nombre_operario: operario.Nombre_operario,
-            Rol_operario: operario.Rol_operario
+            Rol_operario: operario.Rol_operario,
+            expiresIn
         };
     }
 
@@ -118,6 +126,43 @@ export class OperarioService {
         if (!updatedOperario) throw new Error('InternalError');
 
         return updatedOperario;
+    }
+
+    /**
+     * Genera un JWT token para un operario
+     * @param operario Operario a codificar en el token
+     * @returns JWT token
+     */
+    private generateToken(operario: Operario): string {
+        const payload: OperarioTokenPayload = {
+            Id_operario: operario.Id_operario!,
+            Nombre_operario: operario.Nombre_operario,
+            Rol_operario: operario.Rol_operario
+        };
+
+        const secret: string = process.env.OPERARIO_JWT_SECRET || 'operario_secret_key_default';
+        const expirationValue = process.env.OPERARIO_JWT_EXPIRATION || '7d';
+        
+        const options: jwt.SignOptions = {
+            expiresIn: expirationValue as any
+        };
+
+        return jwt.sign(payload, secret, options);
+    }
+
+    /**
+     * Verifica un JWT token
+     * @param token Token a verificar
+     * @returns Payload del token o null si es inválido
+     */
+    verifyToken(token: string): OperarioTokenPayload | null {
+        try {
+            const secret: string = process.env.OPERARIO_JWT_SECRET || 'operario_secret_key_default';
+            const decoded = jwt.verify(token, secret) as OperarioTokenPayload;
+            return decoded;
+        } catch (error) {
+            return null;
+        }
     }
 
     /**
