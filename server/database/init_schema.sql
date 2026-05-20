@@ -13,6 +13,9 @@ CREATE TABLE Operario (
     Rol_operario ENUM('Admin', 'Supervisor', 'Operario') NOT NULL
 );
 
+-- Insertamos administrador por defecto
+INSERT INTO Operario (Nombre_operario, Clave_operario, Rol_operario) VALUES ('admin', '$2b$10$BDeya/Rm27J7vlYs4pl3GOoUlQcDnxj3The423cqxMjuWC0tzAQ7a', 'Admin');
+
 -- 2. Tabla Producto
 CREATE TABLE Producto (
     Id_producto INT AUTO_INCREMENT PRIMARY KEY,
