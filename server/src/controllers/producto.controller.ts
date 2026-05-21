@@ -1,6 +1,7 @@
 import { Service } from 'typedi';
 import { Request, Response, Router } from 'express';
 import { ProductoService } from '../services/producto.service';
+import { authMiddleware } from '../middleware/auth.middleware';
 
 @Service()
 export class ProductoController {
@@ -11,9 +12,9 @@ export class ProductoController {
     ) {
         this.productoRouter.get('/', this.getAll.bind(this));
         this.productoRouter.get('/:id', this.getById.bind(this));
-        this.productoRouter.post('/', this.create.bind(this));
-        this.productoRouter.put('/:id', this.update.bind(this));
-        this.productoRouter.delete('/:id', this.delete.bind(this));
+        this.productoRouter.post('/', authMiddleware, this.create.bind(this));
+        this.productoRouter.put('/:id', authMiddleware, this.update.bind(this));
+        this.productoRouter.delete('/:id', authMiddleware, this.delete.bind(this));
     }
 
     /**

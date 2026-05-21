@@ -1,6 +1,7 @@
 import { Service } from 'typedi';
 import { Request, Response, Router } from 'express';
 import { OrdenService } from '../services/orden.service';
+import { authMiddleware } from '../middleware/auth.middleware';
 
 @Service()
 export class OrdenController {
@@ -12,12 +13,12 @@ export class OrdenController {
         this.ordenRouter.get('/', this.getAll.bind(this));
         this.ordenRouter.get('/codigo/:codigo', this.getByCodigo.bind(this));
         this.ordenRouter.get('/:id', this.getById.bind(this));
-        this.ordenRouter.post('/', this.create.bind(this));
-        this.ordenRouter.put('/:id', this.update.bind(this));
-        this.ordenRouter.patch('/:id/estado', this.updateEstado.bind(this));
-        this.ordenRouter.patch('/:id/cantidad', this.updateCantidadTotal.bind(this));
-        this.ordenRouter.post('/:id/verificar', this.verificar.bind(this));
-        this.ordenRouter.delete('/:id', this.delete.bind(this));
+        this.ordenRouter.post('/', authMiddleware, this.create.bind(this));
+        this.ordenRouter.put('/:id', authMiddleware, this.update.bind(this));
+        this.ordenRouter.patch('/:id/estado', authMiddleware, this.updateEstado.bind(this));
+        this.ordenRouter.patch('/:id/cantidad', authMiddleware, this.updateCantidadTotal.bind(this));
+        this.ordenRouter.post('/:id/verificar', authMiddleware, this.verificar.bind(this));
+        this.ordenRouter.delete('/:id', authMiddleware, this.delete.bind(this));
     }
 
     /**

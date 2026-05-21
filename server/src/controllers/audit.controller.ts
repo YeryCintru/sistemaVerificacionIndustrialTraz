@@ -1,6 +1,7 @@
 import { Service } from 'typedi';
 import { Request, Response, Router } from 'express';
 import { AuditService } from '../services/audit.service';
+import { authMiddleware } from '../middleware/auth.middleware';
 
 @Service()
 export class AuditController {
@@ -10,9 +11,9 @@ export class AuditController {
         private readonly auditService: AuditService
     ) {
         this.auditRouter.get('/', this.getAll.bind(this));
-        this.auditRouter.post('/', this.create.bind(this));
-        this.auditRouter.put('/:id', this.update.bind(this));
-        this.auditRouter.delete('/:id', this.delete.bind(this));
+        this.auditRouter.post('/', authMiddleware, this.create.bind(this));
+        this.auditRouter.put('/:id', authMiddleware, this.update.bind(this));
+        this.auditRouter.delete('/:id', authMiddleware, this.delete.bind(this));
     }
 
     /**

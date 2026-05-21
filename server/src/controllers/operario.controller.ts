@@ -1,6 +1,7 @@
 import { Service } from 'typedi';
 import { Request, Response, Router } from 'express';
 import { OperarioService } from '../services/operario.service';
+import { authMiddleware } from '../middleware/auth.middleware';
 
 @Service()
 export class OperarioController {
@@ -11,9 +12,9 @@ export class OperarioController {
     ) {
         this.operarioRouter.post('/auth/login', this.login.bind(this));
         this.operarioRouter.get('/', this.getAll.bind(this));
-        this.operarioRouter.post('/', this.register.bind(this));
-        this.operarioRouter.put('/:id', this.update.bind(this));
-        this.operarioRouter.delete('/:id', this.delete.bind(this));
+        this.operarioRouter.post('/', authMiddleware, this.register.bind(this));
+        this.operarioRouter.put('/:id', authMiddleware, this.update.bind(this));
+        this.operarioRouter.delete('/:id', authMiddleware, this.delete.bind(this));
     }
 
     /**
