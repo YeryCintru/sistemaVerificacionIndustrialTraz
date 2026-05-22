@@ -1,0 +1,19 @@
+meta {
+  name: Create Supervisor
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:3000/api/operarios
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "Nombre_operario": "Yeray Admin",
+    "Clave_operario": "tfg2026",
+    "Rol_operario": "Admin"
+  }
+}
