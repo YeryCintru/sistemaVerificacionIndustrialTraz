@@ -86,11 +86,17 @@ export class OrdenController {
     async create(req: Request, res: Response): Promise<void> {
         try {
             const ordenData = req.body;
-            const newOrden = await this.ordenService.createOrden(ordenData);
+            const requestingOperario = {
+                Id_operario: (req as any).operario.Id_operario,
+                Rol_operario: (req as any).operario.Rol_operario
+            };
+            const newOrden = await this.ordenService.createOrden(ordenData, requestingOperario);
             res.status(201).json(newOrden);
         } catch (error) {
             const msg = (error as Error).message;
-            if (msg === 'ProductoNotFound') {
+            if (msg === 'UnauthorizedAccessError') {
+                res.status(403).json({ error: 'No tienes permisos para crear órdenes' });
+            } else if (msg === 'ProductoNotFound') {
                 res.status(400).json({ error: 'El producto asociado no existe' });
             } else if ((error as any).code === 'ER_DUP_ENTRY') {
                 res.status(409).json({ error: 'El lote de producción ya existe' });
@@ -108,11 +114,17 @@ export class OrdenController {
         try {
             const id = Number(req.params.id);
             const data = req.body;
-            const updatedOrden = await this.ordenService.updateOrden(id, data);
+            const requestingOperario = {
+                Id_operario: (req as any).operario.Id_operario,
+                Rol_operario: (req as any).operario.Rol_operario
+            };
+            const updatedOrden = await this.ordenService.updateOrden(id, data, requestingOperario);
             res.status(200).json(updatedOrden);
         } catch (error) {
             const msg = (error as Error).message;
-            if (msg === 'OrdenNotFound') {
+            if (msg === 'UnauthorizedAccessError') {
+                res.status(403).json({ error: 'No tienes permisos para actualizar órdenes' });
+            } else if (msg === 'OrdenNotFound') {
                 res.status(404).json({ error: 'Orden no encontrada' });
             } else if (msg === 'ProductoNotFound') {
                 res.status(400).json({ error: 'El producto asociado no existe' });
@@ -137,11 +149,18 @@ export class OrdenController {
                 return;
             }
 
-            const updatedOrden = await this.ordenService.updateEstado(id, estado_ordenProd);
+            const requestingOperario = {
+                Id_operario: (req as any).operario.Id_operario,
+                Rol_operario: (req as any).operario.Rol_operario
+            };
+
+            const updatedOrden = await this.ordenService.updateEstado(id, estado_ordenProd, requestingOperario);
             res.status(200).json(updatedOrden);
         } catch (error) {
             const msg = (error as Error).message;
-            if (msg === 'OrdenNotFound') {
+            if (msg === 'UnauthorizedAccessError') {
+                res.status(403).json({ error: 'No tienes permisos para actualizar el estado de órdenes' });
+            } else if (msg === 'OrdenNotFound') {
                 res.status(404).json({ error: 'Orden no encontrada' });
             } else {
                 console.error('Error al actualizar el estado de la orden:', error);
@@ -164,11 +183,18 @@ export class OrdenController {
                 return;
             }
 
-            const updatedOrden = await this.ordenService.updateCantidadTotal(id, Number(cantidad_ordenProd));
+            const requestingOperario = {
+                Id_operario: (req as any).operario.Id_operario,
+                Rol_operario: (req as any).operario.Rol_operario
+            };
+
+            const updatedOrden = await this.ordenService.updateCantidadTotal(id, Number(cantidad_ordenProd), requestingOperario);
             res.status(200).json(updatedOrden);
         } catch (error) {
             const msg = (error as Error).message;
-            if (msg === 'OrdenNotFound') {
+            if (msg === 'UnauthorizedAccessError') {
+                res.status(403).json({ error: 'No tienes permisos para actualizar la cantidad de órdenes' });
+            } else if (msg === 'OrdenNotFound') {
                 res.status(404).json({ error: 'Orden no encontrada' });
             } else if (msg === 'OrdenYaCerrada') {
                 res.status(400).json({ error: 'No se puede modificar una orden cerrada' });
@@ -186,18 +212,25 @@ export class OrdenController {
     async verificar(req: Request, res: Response): Promise<void> {
         try {
             const id = Number(req.params.id);
-            const { resultado, idOperario, comentarios } = req.body;
+            const { resultado, comentarios } = req.body;
 
             if (!resultado) {
                 res.status(400).json({ error: 'El campo resultado es obligatorio' });
                 return;
             }
 
-            const updatedOrden = await this.ordenService.verificarOrden(id, resultado, idOperario, comentarios);
+            const requestingOperario = {
+                Id_operario: (req as any).operario.Id_operario,
+                Rol_operario: (req as any).operario.Rol_operario
+            };
+
+            const updatedOrden = await this.ordenService.verificarOrden(id, resultado, requestingOperario, comentarios);
             res.status(200).json(updatedOrden);
         } catch (error) {
             const msg = (error as Error).message;
-            if (msg === 'OrdenNotFound') {
+            if (msg === 'UnauthorizedAccessError') {
+                res.status(403).json({ error: 'No tienes permisos para verificar órdenes' });
+            } else if (msg === 'OrdenNotFound') {
                 res.status(404).json({ error: 'Orden no encontrada' });
             } else if (msg === 'OrdenYaCerrada') {
                 res.status(400).json({ error: 'No se puede verificar una orden cerrada' });
@@ -215,10 +248,17 @@ export class OrdenController {
     async delete(req: Request, res: Response): Promise<void> {
         try {
             const id = Number(req.params.id);
-            await this.ordenService.deleteOrden(id);
+            const requestingOperario = {
+                Id_operario: (req as any).operario.Id_operario,
+                Rol_operario: (req as any).operario.Rol_operario
+            };
+            await this.ordenService.deleteOrden(id, requestingOperario);
             res.status(204).send();
         } catch (error) {
-            if ((error as Error).message === 'OrdenNotFound') {
+            const msg = (error as Error).message;
+            if (msg === 'UnauthorizedAccessError') {
+                res.status(403).json({ error: 'No tienes permisos para eliminar órdenes' });
+            } else if (msg === 'OrdenNotFound') {
                 res.status(404).json({ error: 'Orden no encontrada' });
             } else {
                 console.error('Error al eliminar orden:', error);
