@@ -29,8 +29,14 @@ export class AuditService {
      * Actualiza un registro de auditoría existente.
      * @param id ID del log.
      * @param data Datos a actualizar.
+     * @param requestingOperario Operario que realiza la acción
      */
-    async updateLog(id: number, data: Partial<AuditLog>): Promise<any> {
+    async updateLog(id: number, data: Partial<AuditLog>, requestingOperario: { Id_operario: number, Rol_operario: string }): Promise<any> {
+        // Validar permisos: Solo Admin puede actualizar
+        if (requestingOperario.Rol_operario !== 'Admin') {
+            throw new Error('UnauthorizedAccessError');
+        }
+
         const updated = await this.auditRepository.update(id, data);
         if (!updated) {
             throw new Error('AuditLogNotFound');
@@ -41,8 +47,14 @@ export class AuditService {
     /**
      * Elimina un registro de auditoría.
      * @param id ID del log.
+     * @param requestingOperario Operario que realiza la acción
      */
-    async deleteLog(id: number): Promise<void> {
+    async deleteLog(id: number, requestingOperario: { Id_operario: number, Rol_operario: string }): Promise<void> {
+        // Validar permisos: Solo Admin puede eliminar
+        if (requestingOperario.Rol_operario !== 'Admin') {
+            throw new Error('UnauthorizedAccessError');
+        }
+
         const deleted = await this.auditRepository.delete(id);
         if (!deleted) {
             throw new Error('AuditLogNotFound');

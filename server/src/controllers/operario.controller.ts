@@ -68,11 +68,17 @@ export class OperarioController {
     async register(req: Request, res: Response): Promise<void> {
         try {
             const operarioData = req.body;
-            const newOperario = await this.operarioService.registerOperario(operarioData);
+            const requestingOperario = {
+                Id_operario: (req as any).operario.Id_operario,
+                Rol_operario: (req as any).operario.Rol_operario
+            };
+            const newOperario = await this.operarioService.registerOperario(operarioData, requestingOperario);
             res.status(201).json(newOperario);
         } catch (error) {
             const msg = (error as Error).message;
-            if (msg === 'OperarioAlreadyExists') {
+            if (msg === 'UnauthorizedAccessError') {
+                res.status(403).json({ error: 'No tienes permisos para registrar operarios' });
+            } else if (msg === 'OperarioAlreadyExists') {
                 res.status(409).json({ error: 'El nombre de operario ya está en uso' });
             } else {
                 console.error('Error al registrar operario:', error);
@@ -89,10 +95,17 @@ export class OperarioController {
         try {
             const id = Number(req.params.id);
             const data = req.body;
-            const updatedOperario = await this.operarioService.updateOperario(id, data);
+            const requestingOperario = {
+                Id_operario: (req as any).operario.Id_operario,
+                Rol_operario: (req as any).operario.Rol_operario
+            };
+            const updatedOperario = await this.operarioService.updateOperario(id, data, requestingOperario);
             res.status(200).json(updatedOperario);
         } catch (error) {
-            if ((error as Error).message === 'OperarioNotFound') {
+            const msg = (error as Error).message;
+            if (msg === 'UnauthorizedAccessError') {
+                res.status(403).json({ error: 'No tienes permisos para actualizar operarios' });
+            } else if (msg === 'OperarioNotFound') {
                 res.status(404).json({ error: 'Operario no encontrado' });
             } else {
                 console.error('Error al actualizar operario:', error);
@@ -108,10 +121,17 @@ export class OperarioController {
     async delete(req: Request, res: Response): Promise<void> {
         try {
             const id = Number(req.params.id);
-            await this.operarioService.deleteOperario(id);
+            const requestingOperario = {
+                Id_operario: (req as any).operario.Id_operario,
+                Rol_operario: (req as any).operario.Rol_operario
+            };
+            await this.operarioService.deleteOperario(id, requestingOperario);
             res.status(204).send();
         } catch (error) {
-            if ((error as Error).message === 'OperarioNotFound') {
+            const msg = (error as Error).message;
+            if (msg === 'UnauthorizedAccessError') {
+                res.status(403).json({ error: 'No tienes permisos para eliminar operarios' });
+            } else if (msg === 'OperarioNotFound') {
                 res.status(404).json({ error: 'Operario no encontrado' });
             } else if ((error as any).code === 'ER_ROW_IS_REFERENCED_2') {
                 res.status(409).json({ error: 'No se puede eliminar el operario porque tiene registros asociados (logs)' });

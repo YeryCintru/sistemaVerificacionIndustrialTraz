@@ -35,9 +35,15 @@ export class ProductoService {
     /**
      * Lógica de negocio para crear un nuevo producto.
      * @param data Datos del producto.
+     * @param requestingOperario Operario que realiza la acción
      * @returns Producto recién creado.
      */
-    async createProducto(data: ProductoCreation): Promise<Producto> {
+    async createProducto(data: ProductoCreation, requestingOperario: { Id_operario: number, Rol_operario: string }): Promise<Producto> {
+        // Validar permisos: Solo Admin y Supervisor pueden crear
+        if (requestingOperario.Rol_operario !== 'Admin' && requestingOperario.Rol_operario !== 'Supervisor') {
+            throw new Error('UnauthorizedAccessError');
+        }
+
         const nextSeq = await this.productoRepository.getNextSequence();
 
         const isCodigoValid = data.codigo_producto && /^PROD-\d+$/.test(data.codigo_producto);
@@ -63,6 +69,7 @@ export class ProductoService {
             accion_log: 'Crear producto',
             resultado_log: 'Éxito',
             comentarios_log: `Código: ${newProducto.codigo_producto || 'N/A'}`,
+            id_operario: requestingOperario.Id_operario,
             id_producto: newProducto.id_producto
         });
 
@@ -73,8 +80,14 @@ export class ProductoService {
      * Actualiza un producto existente.
      * @param id ID del producto.
      * @param data Datos a actualizar.
+     * @param requestingOperario Operario que realiza la acción
      */
-    async updateProducto(id: number, data: Partial<ProductoCreation>): Promise<Producto> {
+    async updateProducto(id: number, data: Partial<ProductoCreation>, requestingOperario: { Id_operario: number, Rol_operario: string }): Promise<Producto> {
+        // Validar permisos: Solo Admin y Supervisor pueden actualizar
+        if (requestingOperario.Rol_operario !== 'Admin' && requestingOperario.Rol_operario !== 'Supervisor') {
+            throw new Error('UnauthorizedAccessError');
+        }
+
         const updated = await this.productoRepository.update(id, data);
         if (!updated) {
             throw new Error('ProductoNotFound');
@@ -86,6 +99,7 @@ export class ProductoService {
             accion_log: 'Actualizar producto',
             resultado_log: 'Éxito',
             comentarios_log: `ID: ${id}, Código: ${updatedProducto.codigo_producto}`,
+            id_operario: requestingOperario.Id_operario,
             id_producto: id
         });
 
@@ -95,11 +109,25 @@ export class ProductoService {
     /**
      * Elimina un producto.
      * @param id ID del producto.
+     * @param requestingOperario Operario que realiza la acción
      */
-    async deleteProducto(id: number): Promise<void> {
+    async deleteProducto(id: number, requestingOperario: { Id_operario: number, Rol_operario: string }): Promise<void> {
+        // Validar permisos: Solo Admin puede eliminar
+        if (requestingOperario.Rol_operario !== 'Admin') {
+            throw new Error('UnauthorizedAccessError');
+        }
+
         const deleted = await this.productoRepository.delete(id);
         if (!deleted) {
             throw new Error('ProductoNotFound');
         }
+
+        await this.auditService.logAction({
+            accion_log: 'Eliminar producto',
+            resultado_log: 'Éxito',
+            comentarios_log: `ID: ${id}`,
+            id_operario: requestingOperario.Id_operario,
+            id_producto: id
+        });
     }
 }

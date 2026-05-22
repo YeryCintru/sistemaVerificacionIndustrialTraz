@@ -78,8 +78,14 @@ export class OperarioService {
     /**
      * Registra un nuevo operario con clave hasheada.
      * @param data Datos del operario.
+     * @param requestingOperario Operario que realiza la acción
      */
-    async registerOperario(data: OperarioCreation): Promise<Omit<Operario, 'Clave_operario'>> {
+    async registerOperario(data: OperarioCreation, requestingOperario: { Id_operario: number, Rol_operario: string }): Promise<Omit<Operario, 'Clave_operario'>> {
+        // Validar permisos: Solo Admin puede registrar operarios
+        if (requestingOperario.Rol_operario !== 'Admin') {
+            throw new Error('UnauthorizedAccessError');
+        }
+
         //Verificar si el nombre ya existe
         const existing = await this.operarioRepository.findByNombre(data.Nombre_operario);
         if (existing) {
@@ -107,8 +113,14 @@ export class OperarioService {
      * Actualiza un operario existente.
      * @param id ID del operario.
      * @param data Datos a actualizar.
+     * @param requestingOperario Operario que realiza la acción
      */
-    async updateOperario(id: number, data: Partial<Operario>): Promise<Omit<Operario, 'Clave_operario'>> {
+    async updateOperario(id: number, data: Partial<Operario>, requestingOperario: { Id_operario: number, Rol_operario: string }): Promise<Omit<Operario, 'Clave_operario'>> {
+        // Validar permisos: Solo Admin puede actualizar operarios
+        if (requestingOperario.Rol_operario !== 'Admin') {
+            throw new Error('UnauthorizedAccessError');
+        }
+
         const updateData: Partial<Operario> = { ...data };
 
         // Si se cambia la clave, hashearla
@@ -168,8 +180,14 @@ export class OperarioService {
     /**
      * Elimina un operario.
      * @param id ID del operario.
+     * @param requestingOperario Operario que realiza la acción
      */
-    async deleteOperario(id: number): Promise<void> {
+    async deleteOperario(id: number, requestingOperario: { Id_operario: number, Rol_operario: string }): Promise<void> {
+        // Validar permisos: Solo Admin puede eliminar operarios
+        if (requestingOperario.Rol_operario !== 'Admin') {
+            throw new Error('UnauthorizedAccessError');
+        }
+
         const deleted = await this.operarioRepository.delete(id);
         if (!deleted) {
             throw new Error('OperarioNotFound');
