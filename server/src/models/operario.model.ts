@@ -34,6 +34,17 @@ export interface OperarioLogin {
  * Interfaz para la respuesta de autenticación del Operario.
  */
 export interface OperarioAuthResponse {
+    token: string;
+    Id_operario: number;
+    Nombre_operario: string;
+    Rol_operario: RolOperario;
+    expiresIn: number;
+}
+
+/**
+ * Interfaz para el payload del JWT de Operario.
+ */
+export interface OperarioTokenPayload {
     Id_operario: number;
     Nombre_operario: string;
     Rol_operario: RolOperario;

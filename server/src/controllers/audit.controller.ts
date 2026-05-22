@@ -1,6 +1,7 @@
 import { Service } from 'typedi';
 import { Request, Response, Router } from 'express';
 import { AuditService } from '../services/audit.service';
+import { authMiddleware } from '../middleware/auth.middleware';
 
 @Service()
 export class AuditController {
@@ -10,9 +11,9 @@ export class AuditController {
         private readonly auditService: AuditService
     ) {
         this.auditRouter.get('/', this.getAll.bind(this));
-        this.auditRouter.post('/', this.create.bind(this));
-        this.auditRouter.put('/:id', this.update.bind(this));
-        this.auditRouter.delete('/:id', this.delete.bind(this));
+        this.auditRouter.post('/', authMiddleware, this.create.bind(this));
+        this.auditRouter.put('/:id', authMiddleware, this.update.bind(this));
+        this.auditRouter.delete('/:id', authMiddleware, this.delete.bind(this));
     }
 
     /**
@@ -59,10 +60,17 @@ export class AuditController {
         try {
             const id = Number(req.params.id);
             const data = req.body;
-            const updatedLog = await this.auditService.updateLog(id, data);
+            const requestingOperario = {
+                Id_operario: (req as any).operario.Id_operario,
+                Rol_operario: (req as any).operario.Rol_operario
+            };
+            const updatedLog = await this.auditService.updateLog(id, data, requestingOperario);
             res.status(200).json(updatedLog);
         } catch (error) {
-            if ((error as Error).message === 'AuditLogNotFound') {
+            const msg = (error as Error).message;
+            if (msg === 'UnauthorizedAccessError') {
+                res.status(403).json({ error: 'No tienes permisos para actualizar registros de auditoría' });
+            } else if (msg === 'AuditLogNotFound') {
                 res.status(404).json({ error: 'Registro de auditoría no encontrado' });
             } else {
                 console.error('Error al actualizar auditoría:', error);
@@ -78,10 +86,17 @@ export class AuditController {
     async delete(req: Request, res: Response): Promise<void> {
         try {
             const id = Number(req.params.id);
-            await this.auditService.deleteLog(id);
+            const requestingOperario = {
+                Id_operario: (req as any).operario.Id_operario,
+                Rol_operario: (req as any).operario.Rol_operario
+            };
+            await this.auditService.deleteLog(id, requestingOperario);
             res.status(204).send();
         } catch (error) {
-            if ((error as Error).message === 'AuditLogNotFound') {
+            const msg = (error as Error).message;
+            if (msg === 'UnauthorizedAccessError') {
+                res.status(403).json({ error: 'No tienes permisos para eliminar registros de auditoría' });
+            } else if (msg === 'AuditLogNotFound') {
                 res.status(404).json({ error: 'Registro de auditoría no encontrado' });
             } else {
                 console.error('Error al eliminar auditoría:', error);
