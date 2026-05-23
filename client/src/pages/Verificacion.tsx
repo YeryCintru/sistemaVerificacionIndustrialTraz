@@ -1,16 +1,42 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { OrdenProduccion, verificarOrden } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { BotonLogout } from '../components/BotonLogout';
 
 interface VerificacionProps {
   orden: OrdenProduccion;
+  setOrdenActual: (orden: OrdenProduccion | null) => void;
 }
 
-export function Verificacion({ orden }: VerificacionProps) {
+export function Verificacion({ orden, setOrdenActual }: VerificacionProps) {
   const [resultado, setResultado] = React.useState('');
   const [comentarios, setComentarios] = React.useState('');
   const navigate = useNavigate();
+  const prevCantidadRef = useRef<number>(orden.Cantidad_ordenProd);
+
+  // Reaccionamos cuando la orden cambie (gracias al hook global en App.tsx)
+  useEffect(() => {
+    if (orden.Estado_ordenProd === 'Cerrada') {
+      alert('La orden ha sido cerrada por el servidor. Redirigiendo...');
+      navigate('/detalle');
+    }
+    // Detectar si ha cambiado la cantidad total, guardando el estado actual antes de volver a renderizarse
+    if (prevCantidadRef.current !== undefined && prevCantidadRef.current !== orden.Cantidad_ordenProd) {
+      alert(`¡Aviso! La cantidad total de la orden ha cambiado de ${prevCantidadRef.current} a ${orden.Cantidad_ordenProd}`);
+    }
+
+    // ?? 0 por si los valores vienen como undefined desde el servidor
+    const completada = orden.CantidadCompletada_ordenProd ?? 0;
+    const total = orden.Cantidad_ordenProd ?? 0;
+
+    if (completada >= total && total > 0) {
+      alert('¡La orden ha sido completada!');
+    }
+
+    // Actualizamos la referencia con el valor actual para la próxima vez
+    prevCantidadRef.current = orden.Cantidad_ordenProd;
+
+  }, [orden.Estado_ordenProd, orden.Cantidad_ordenProd, orden.CantidadCompletada_ordenProd, navigate]);
 
   const handleVerificar = async (res: string) => {
     try {

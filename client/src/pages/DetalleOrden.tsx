@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { OrdenProduccion } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { BotonLogout } from '../components/BotonLogout';
@@ -7,12 +7,40 @@ import { getProducto } from '../services/api';
 interface DetalleOrdenProps {
   orden: OrdenProduccion;
   onVolver: () => void;
+  setOrdenActual: (orden: OrdenProduccion | null) => void;
 }
 
-export function DetalleOrden({ orden, onVolver }: DetalleOrdenProps) {
+export function DetalleOrden({ orden, onVolver, setOrdenActual }: DetalleOrdenProps) {
   const navigate = useNavigate();
   const [productoDetalle, setProductoDetalle] = React.useState<any>(null);
   const [showModal, setShowModal] = React.useState(false);
+
+  // Guardamos la cantidad que hay ahora para compararla en el futuro
+  const prevCantidadRef = useRef<number>(orden.Cantidad_ordenProd);
+
+  // Reaccionar a cambios externos en la orden
+  useEffect(() => {
+    // Detectar si la orden se ha cerrado
+    if (orden.Estado_ordenProd === 'Cerrada') {
+      alert('¡Atención! Esta orden acaba de ser cerrada.');
+    }
+
+    // Detectar si ha cambiado la cantidad total, guardando el estado actual antes de volver a renderizarse
+    if (prevCantidadRef.current !== undefined && prevCantidadRef.current !== orden.Cantidad_ordenProd) {
+      alert(`¡Aviso! La cantidad total de la orden ha cambiado de ${prevCantidadRef.current} a ${orden.Cantidad_ordenProd}`);
+    }
+
+    // Usamos ?? 0 por si los valores vienen como undefined desde el servidor
+    const completada = orden.CantidadCompletada_ordenProd ?? 0;
+    const total = orden.Cantidad_ordenProd ?? 0;
+
+    if (completada >= total && total > 0) {
+      alert('¡La orden ha sido completada!');
+    }
+
+    // Actualizamos la referencia con el valor actual para la próxima vez
+    prevCantidadRef.current = orden.Cantidad_ordenProd;
+  }, [orden.Estado_ordenProd, orden.Cantidad_ordenProd, orden.CantidadCompletada_ordenProd, navigate]);
 
   const handleVerificarPieza = () => {
     navigate('/verificacion');
@@ -215,7 +243,7 @@ export function DetalleOrden({ orden, onVolver }: DetalleOrdenProps) {
             position: 'relative',
             boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
           }}>
-            <button 
+            <button
               onClick={() => setShowModal(false)}
               style={{
                 position: 'absolute',
@@ -230,10 +258,10 @@ export function DetalleOrden({ orden, onVolver }: DetalleOrdenProps) {
             >
               &times;
             </button>
-            
+
             <h2 style={{ marginTop: 0, color: '#333' }}>Detalles del Producto</h2>
             <hr style={{ margin: '20px 0', border: 'none', borderTop: '1px solid #eee' }} />
-            
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <div>
                 <label style={{ fontWeight: 'bold', color: '#888', fontSize: '12px', textTransform: 'uppercase' }}>Nombre</label>
@@ -245,9 +273,9 @@ export function DetalleOrden({ orden, onVolver }: DetalleOrdenProps) {
               </div>
               <div>
                 <label style={{ fontWeight: 'bold', color: '#888', fontSize: '12px', textTransform: 'uppercase' }}>Estado</label>
-                <p style={{ 
-                  margin: '5px 0', 
-                  fontSize: '16px', 
+                <p style={{
+                  margin: '5px 0',
+                  fontSize: '16px',
                   color: productoDetalle.Estado_producto === 'Correcto' ? '#28a745' : '#dc3545',
                   fontWeight: 'bold'
                 }}>
@@ -269,7 +297,7 @@ export function DetalleOrden({ orden, onVolver }: DetalleOrdenProps) {
                 </div>
               )}
             </div>
-            
+
             <button
               onClick={() => setShowModal(false)}
               style={{
