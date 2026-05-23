@@ -10,8 +10,8 @@ export class ProductoController {
     constructor(
         private readonly productoService: ProductoService
     ) {
-        this.productoRouter.get('/', this.getAll.bind(this));
-        this.productoRouter.get('/:id', this.getById.bind(this));
+        this.productoRouter.get('/', authMiddleware, this.getAll.bind(this));
+        this.productoRouter.get('/:id', authMiddleware, this.getById.bind(this));
         this.productoRouter.post('/', authMiddleware, this.create.bind(this));
         this.productoRouter.put('/:id', authMiddleware, this.update.bind(this));
         this.productoRouter.delete('/:id', authMiddleware, this.delete.bind(this));

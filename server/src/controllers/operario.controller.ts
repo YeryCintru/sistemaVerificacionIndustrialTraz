@@ -11,7 +11,7 @@ export class OperarioController {
         private readonly operarioService: OperarioService
     ) {
         this.operarioRouter.post('/auth/login', this.login.bind(this));
-        this.operarioRouter.get('/', this.getAll.bind(this));
+        this.operarioRouter.get('/', authMiddleware, this.getAll.bind(this));
         this.operarioRouter.post('/', authMiddleware, this.register.bind(this));
         this.operarioRouter.put('/:id', authMiddleware, this.update.bind(this));
         this.operarioRouter.delete('/:id', authMiddleware, this.delete.bind(this));

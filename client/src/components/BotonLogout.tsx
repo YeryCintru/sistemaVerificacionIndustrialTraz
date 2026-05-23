@@ -1,12 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { logout } from '../services/api';
 
 export function BotonLogout() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // Elimina la información del usuario del localStorage
-    localStorage.removeItem('usuario');
+    // Llama a la función de logout del servicio API
+    logout();
     // Redirige a la pantalla de inicio de sesión
     navigate('/login');
   };

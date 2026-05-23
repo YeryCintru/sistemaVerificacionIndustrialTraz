@@ -10,7 +10,17 @@ interface BusquedaOrdenProps {
 export function BusquedaOrden({ onBuscar }: BusquedaOrdenProps) {
   const [codigo, setCodigo] = React.useState('');
   const [loading, setLoading] = React.useState(false);
+  const [nombreUsuario, setNombreUsuario] = React.useState('');
   const navigate = useNavigate();
+
+  // Obtener nombre del usuario del localStorage
+  React.useEffect(() => {
+    const usuarioData = localStorage.getItem('usuario');
+    if (usuarioData) {
+      const usuario = JSON.parse(usuarioData);
+      setNombreUsuario(usuario.Nombre_operario || 'Usuario');
+    }
+  }, []);
 
   const handleBuscar = async () => {
     if (!codigo.trim()) {
@@ -50,6 +60,14 @@ export function BusquedaOrden({ onBuscar }: BusquedaOrdenProps) {
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         textAlign: 'center'
       }}>
+        <div style={{
+          marginBottom: '30px',
+          fontSize: '18px',
+          color: '#333',
+          fontWeight: '500'
+        }}>
+          Bienvenido, <span style={{ color: '#007bff', fontWeight: 'bold' }}>{nombreUsuario}</span>
+        </div>
         <h1>Búsqueda de Orden</h1>
         <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
           <input

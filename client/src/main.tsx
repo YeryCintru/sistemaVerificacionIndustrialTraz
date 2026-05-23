@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { OrdenProduccion } from './services/api';
+import { getOrdenPorCodigo, OrdenProduccion, initializeAuth } from './services/api';
 import { BusquedaOrden } from './pages/BusquedaOrden';
 import { DetalleOrden } from './pages/DetalleOrden';
 import { Verificacion } from './pages/Verificacion';
@@ -9,6 +9,9 @@ import { Login } from './pages/Login';
 import { socket, connectSocket, disconnectSocket } from './services/socket';
 
 import { useOrderSocket } from './hooks/useOrderSocket';
+
+// Inicializar autenticación al cargar la app
+initializeAuth();
 
 function App() {
   // Se guarda el id de la orden que queremos seguir
