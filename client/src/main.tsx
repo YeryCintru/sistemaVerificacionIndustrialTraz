@@ -1,11 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { getOrdenPorCodigo, OrdenProduccion } from './services/api';
+import { getOrdenPorCodigo, OrdenProduccion, initializeAuth } from './services/api';
 import { BusquedaOrden } from './pages/BusquedaOrden';
 import { DetalleOrden } from './pages/DetalleOrden';
 import { Verificacion } from './pages/Verificacion';
 import { Login } from './pages/Login';
+
+// Inicializar autenticación al cargar la app
+initializeAuth();
 
 function App() {
   const [ordenActual, setOrdenActual] = React.useState<OrdenProduccion | null>(null);
