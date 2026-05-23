@@ -10,9 +10,9 @@ export class OrdenController {
     constructor(
         private readonly ordenService: OrdenService
     ) {
-        this.ordenRouter.get('/', this.getAll.bind(this));
-        this.ordenRouter.get('/codigo/:codigo', this.getByCodigo.bind(this));
-        this.ordenRouter.get('/:id', this.getById.bind(this));
+        this.ordenRouter.get('/', authMiddleware, this.getAll.bind(this));
+        this.ordenRouter.get('/codigo/:codigo', authMiddleware, this.getByCodigo.bind(this));
+        this.ordenRouter.get('/:id', authMiddleware, this.getById.bind(this));
         this.ordenRouter.post('/', authMiddleware, this.create.bind(this));
         this.ordenRouter.put('/:id', authMiddleware, this.update.bind(this));
         this.ordenRouter.patch('/:id/estado', authMiddleware, this.updateEstado.bind(this));

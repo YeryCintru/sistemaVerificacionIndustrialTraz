@@ -10,7 +10,7 @@ export class AuditController {
     constructor(
         private readonly auditService: AuditService
     ) {
-        this.auditRouter.get('/', this.getAll.bind(this));
+        this.auditRouter.get('/', authMiddleware, this.getAll.bind(this));
         this.auditRouter.post('/', authMiddleware, this.create.bind(this));
         this.auditRouter.put('/:id', authMiddleware, this.update.bind(this));
         this.auditRouter.delete('/:id', authMiddleware, this.delete.bind(this));
