@@ -1,5 +1,6 @@
-import express, { Express, Request, Response, NextFunction } from 'express';
+import express, { Express } from 'express';
 import bodyParser from 'body-parser';
+import cors from 'cors';
 import path from 'path';
 import dotenv from 'dotenv';
 
@@ -12,6 +13,13 @@ import { AuditController } from './controllers/audit.controller';
 dotenv.config();
 
 const app: Express = express();
+
+// Habilitar CORS para permitir peticiones del panel
+app.use(cors({
+  origin: '*',             // En producción, reemplaza por la URL concreta del panel
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
