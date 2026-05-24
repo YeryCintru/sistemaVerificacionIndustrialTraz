@@ -3,9 +3,11 @@ import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { initializeAuth } from './services/api';
 import type { OrdenProduccion } from './services/api';
 import { BusquedaOrden } from './pages/BusquedaOrden';
+import { Ordenes } from './pages/Ordenes';
 import { DetalleOrden } from './pages/DetalleOrden';
 import { Verificacion } from './pages/Verificacion';
 import { Login } from './pages/Login';
+import { Inicio } from './pages/Inicio';
 
 import { useOrderSocket } from './hooks/useOrderSocket';
 
@@ -38,9 +40,12 @@ function App() {
         <Route path="/login" element={<Login />} />
 
         {/* Ruta de Búsqueda y Detalle - Comparten el estado */}
+        <Route path="/ordenes" element={<Ordenes onSeleccionar={handleBuscar} />} />
         <Route path="/busqueda" element={<BusquedaOrden onBuscar={handleBuscar} />} />
-        <Route path="/detalle" element={ordenActual ? <DetalleOrden orden={ordenActual} onVolver={handleVolver} /> : <Navigate to="/busqueda" />} />
-        <Route path="/verificacion" element={ordenActual ? <Verificacion orden={ordenActual} setOrdenActual={setOrdenActual} /> : <Navigate to="/busqueda" />} />
+        <Route path="/detalle" element={ordenActual ? <DetalleOrden orden={ordenActual} onVolver={handleVolver} /> : <Navigate to="/ordenes" />} />
+        <Route path="/verificacion" element={ordenActual ? <Verificacion orden={ordenActual} setOrdenActual={setOrdenActual} /> : <Navigate to="/ordenes" />} />
+        {/* Página de inicio / dashboard */}
+        <Route path="/inicio" element={<Inicio />} />
         {/* Rutas por defecto - Redirigen al login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/login" replace />} />

@@ -16,12 +16,12 @@ export function Login() {
 
     try {
       const response = await login(usuario, contraseña);
-      
+
       // Guardar datos del usuario en localStorage
       localStorage.setItem('usuario', JSON.stringify(response));
-      
+
       // Redirigir a la página de búsqueda de órdenes
-      navigate('/busqueda');
+      navigate('/inicio');
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || 'Error en el login. Intenta de nuevo.';
       setError(errorMessage);
