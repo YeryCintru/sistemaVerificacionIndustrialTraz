@@ -126,8 +126,42 @@ export function logout(): void {
   console.log('Sesión cerrada');
 }
 
+export interface CrearOrdenPayload {
+  cantidad_ordenProd: number;
+  id_producto: number;
+  codigo_ordenProd?: string;
+  lote_ordenProd?: string;
+  comentarios_ordenProd?: string;
+}
+
 export async function getOrdenes(): Promise<OrdenProduccion[]> {
   const response = await axios.get<OrdenProduccion[]>(`${BASE_URL}/api/ordenesprod/`);
+  return response.data;
+}
+
+export async function crearOrden(data: CrearOrdenPayload): Promise<OrdenProduccion> {
+  const response = await axios.post<OrdenProduccion>(`${BASE_URL}/api/ordenesprod/`, data);
+  return response.data;
+}
+
+export async function actualizarEstadoOrden(id: number, estado_ordenProd: string): Promise<OrdenProduccion> {
+  const response = await axios.patch<OrdenProduccion>(
+    `${BASE_URL}/api/ordenesprod/${id}/estado`,
+    { estado_ordenProd }
+  );
+  return response.data;
+}
+
+export async function actualizarCantidadOrden(id: number, cantidad_ordenProd: number): Promise<OrdenProduccion> {
+  const response = await axios.patch<OrdenProduccion>(
+    `${BASE_URL}/api/ordenesprod/${id}/cantidad`,
+    { cantidad_ordenProd }
+  );
+  return response.data;
+}
+
+export async function getProductos(): Promise<Producto[]> {
+  const response = await axios.get<Producto[]>(`${BASE_URL}/api/productos/`);
   return response.data;
 }
 
