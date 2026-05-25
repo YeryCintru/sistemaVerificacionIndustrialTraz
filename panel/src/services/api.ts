@@ -126,6 +126,11 @@ export function logout(): void {
   console.log('Sesión cerrada');
 }
 
+export async function getOrdenes(): Promise<OrdenProduccion[]> {
+  const response = await axios.get<OrdenProduccion[]>(`${BASE_URL}/api/ordenesprod/`);
+  return response.data;
+}
+
 export async function getOrdenPorCodigo(codigoOrden: string): Promise<OrdenProduccion> {
   const response = await axios.get<OrdenProduccion>(
     `${BASE_URL}/api/ordenesprod/codigo/${encodeURIComponent(codigoOrden)}`
