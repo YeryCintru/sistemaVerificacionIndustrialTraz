@@ -1,18 +1,36 @@
 import React, { useEffect, useRef } from 'react';
-import type { OrdenProduccion } from '../services/api';
+import type { LoginResponse, OrdenProduccion } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { BotonLogout } from '../components/BotonLogout';
-import { getProducto } from '../services/api';
+import {
+  actualizarCantidadOrden,
+  actualizarEstadoOrden,
+  getProducto,
+} from '../services/api';
+
+const ESTADOS_ORDEN = ['Pendiente', 'En Progreso', 'Cerrada'] as const;
+const ROLES_EDITAR = ['Admin', 'Supervisor'];
 
 interface DetalleOrdenProps {
   orden: OrdenProduccion;
   onVolver: () => void;
+  setOrdenActual: (orden: OrdenProduccion) => void;
 }
 
-export function DetalleOrden({ orden, onVolver }: DetalleOrdenProps) {
+export function DetalleOrden({ orden, onVolver, setOrdenActual }: DetalleOrdenProps) {
   const navigate = useNavigate();
   const [productoDetalle, setProductoDetalle] = React.useState<any>(null);
   const [showModal, setShowModal] = React.useState(false);
+  const [showEditModal, setShowEditModal] = React.useState(false);
+  const [editEstado, setEditEstado] = React.useState(orden.Estado_ordenProd);
+  const [editCantidad, setEditCantidad] = React.useState(String(orden.Cantidad_ordenProd));
+  const [guardando, setGuardando] = React.useState(false);
+  const [errorEditar, setErrorEditar] = React.useState('');
+
+  const usuarioRaw = localStorage.getItem('usuario');
+  const usuario: LoginResponse | null = usuarioRaw ? JSON.parse(usuarioRaw) : null;
+  const puedeEditar = usuario && ROLES_EDITAR.includes(usuario.Rol_operario);
+  const ordenCerrada = orden.Estado_ordenProd === 'Cerrada';
 
   // Guardamos la cantidad que hay ahora para compararla en el futuro
   const prevCantidadRef = useRef<number>(orden.Cantidad_ordenProd);
@@ -56,6 +74,75 @@ export function DetalleOrden({ orden, onVolver }: DetalleOrdenProps) {
     }
   };
 
+  const abrirEditar = () => {
+    setEditEstado(orden.Estado_ordenProd);
+    setEditCantidad(String(orden.Cantidad_ordenProd));
+    setErrorEditar('');
+    setShowEditModal(true);
+  };
+
+  const handleGuardarEdicion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorEditar('');
+
+    if (!puedeEditar) {
+      setErrorEditar('No tienes permisos para editar órdenes.');
+      return;
+    }
+
+    if (ordenCerrada) {
+      setErrorEditar('No se puede editar una orden cerrada.');
+      return;
+    }
+
+    const id = orden.Id_ordenProd;
+    if (!id) {
+      setErrorEditar('La orden no tiene identificador válido.');
+      return;
+    }
+
+    const cantidadNum = Number(editCantidad);
+    const completada = orden.CantidadCompletada_ordenProd ?? 0;
+
+    if (!editCantidad || cantidadNum < 1) {
+      setErrorEditar('La cantidad debe ser un número mayor que 0.');
+      return;
+    }
+
+    if (cantidadNum < completada) {
+      setErrorEditar(`La cantidad no puede ser menor que la completada (${completada}).`);
+      return;
+    }
+
+    const cambiaEstado = editEstado !== orden.Estado_ordenProd;
+    const cambiaCantidad = cantidadNum !== orden.Cantidad_ordenProd;
+
+    if (!cambiaEstado && !cambiaCantidad) {
+      setErrorEditar('No hay cambios que guardar.');
+      return;
+    }
+
+    setGuardando(true);
+    try {
+      let ordenActualizada = orden;
+
+      if (cambiaEstado) {
+        ordenActualizada = await actualizarEstadoOrden(id, editEstado);
+      }
+      if (cambiaCantidad) {
+        ordenActualizada = await actualizarCantidadOrden(id, cantidadNum);
+      }
+
+      setOrdenActual(ordenActualizada);
+      setShowEditModal(false);
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { error?: string } } };
+      setErrorEditar(axiosErr.response?.data?.error || 'Error al guardar los cambios.');
+    } finally {
+      setGuardando(false);
+    }
+  };
+
   return (
     <div style={{
       padding: '20px',
@@ -94,9 +181,39 @@ export function DetalleOrden({ orden, onVolver }: DetalleOrdenProps) {
           padding: '30px',
           boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
         }}>
-          <h2 style={{ marginTop: 0, color: '#333', borderBottom: '2px solid #eee', paddingBottom: '10px' }}>
-            Información de la Orden
-          </h2>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '12px',
+            borderBottom: '2px solid #eee',
+            paddingBottom: '10px',
+            marginBottom: '0',
+          }}>
+            <h2 style={{ margin: 0, color: '#333' }}>
+              Información de la Orden
+            </h2>
+            {puedeEditar && (
+              <button
+                onClick={abrirEditar}
+                disabled={ordenCerrada}
+                title={ordenCerrada ? 'No se puede editar una orden cerrada' : 'Editar estado y cantidad'}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  backgroundColor: ordenCerrada ? '#adb5bd' : '#ffc107',
+                  color: ordenCerrada ? '#fff' : '#333',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: ordenCerrada ? 'not-allowed' : 'pointer',
+                }}
+              >
+                Editar
+              </button>
+            )}
+          </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>
             <div>
@@ -218,6 +335,154 @@ export function DetalleOrden({ orden, onVolver }: DetalleOrdenProps) {
       </div>
 
       <BotonLogout />
+
+      {/* Modal de edición: estado y cantidad */}
+      {showEditModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'rgba(0,0,0,0.6)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 10000,
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '32px',
+            maxWidth: '440px',
+            width: '90%',
+            position: 'relative',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+          }}>
+            <button
+              type="button"
+              onClick={() => setShowEditModal(false)}
+              disabled={guardando}
+              style={{
+                position: 'absolute',
+                top: '15px',
+                right: '15px',
+                border: 'none',
+                background: 'none',
+                fontSize: '24px',
+                cursor: 'pointer',
+                color: '#666',
+              }}
+            >
+              &times;
+            </button>
+
+            <h2 style={{ marginTop: 0, color: '#333' }}>Editar orden</h2>
+            <p style={{ margin: '0 0 20px 0', color: '#666', fontSize: '14px' }}>
+              {orden.Codigo_ordenProd} — solo puedes modificar el estado y la cantidad total.
+            </p>
+
+            {errorEditar && (
+              <div style={{
+                backgroundColor: '#f8d7da',
+                border: '1px solid #f5c6cb',
+                color: '#721c24',
+                padding: '10px',
+                borderRadius: '4px',
+                marginBottom: '16px',
+                fontSize: '14px',
+              }}>
+                {errorEditar}
+              </div>
+            )}
+
+            <form onSubmit={handleGuardarEdicion}>
+              <div style={{ marginBottom: '18px' }}>
+                <label style={{ display: 'block', fontWeight: 'bold', color: '#666', fontSize: '14px', marginBottom: '6px' }}>
+                  Estado
+                </label>
+                <select
+                  value={editEstado}
+                  onChange={(e) => setEditEstado(e.target.value)}
+                  disabled={guardando}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    fontSize: '14px',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  {ESTADOS_ORDEN.map((estado) => (
+                    <option key={estado} value={estado}>{estado}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block', fontWeight: 'bold', color: '#666', fontSize: '14px', marginBottom: '6px' }}>
+                  Cantidad total
+                </label>
+                <input
+                  type="number"
+                  min={orden.CantidadCompletada_ordenProd ?? 1}
+                  value={editCantidad}
+                  onChange={(e) => setEditCantidad(e.target.value)}
+                  disabled={guardando}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    fontSize: '14px',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#999' }}>
+                  Completadas: {orden.CantidadCompletada_ordenProd ?? 0}
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="submit"
+                  disabled={guardando}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    backgroundColor: guardando ? '#6c757d' : '#007bff',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: guardando ? 'not-allowed' : 'pointer',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  {guardando ? 'Guardando...' : 'Guardar'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  disabled={guardando}
+                  style={{
+                    padding: '12px 20px',
+                    backgroundColor: '#6c757d',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                  }}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Modal de Detalles del Producto */}
       {showModal && productoDetalle && (
