@@ -4,6 +4,7 @@ import { initializeAuth } from './services/api';
 import type { OrdenProduccion } from './services/api';
 import { BusquedaOrden } from './pages/BusquedaOrden';
 import { Ordenes } from './pages/Ordenes';
+import { CrearOrden } from './pages/CrearOrden';
 import { DetalleOrden } from './pages/DetalleOrden';
 import { Verificacion } from './pages/Verificacion';
 import { Login } from './pages/Login';
@@ -41,8 +42,9 @@ function App() {
 
         {/* Ruta de Búsqueda y Detalle - Comparten el estado */}
         <Route path="/ordenes" element={<Ordenes onSeleccionar={handleBuscar} />} />
+        <Route path="/crear-orden" element={<CrearOrden />} />
         <Route path="/busqueda" element={<BusquedaOrden onBuscar={handleBuscar} />} />
-        <Route path="/detalle" element={ordenActual ? <DetalleOrden orden={ordenActual} onVolver={handleVolver} /> : <Navigate to="/ordenes" />} />
+        <Route path="/detalle" element={ordenActual ? <DetalleOrden orden={ordenActual} onVolver={handleVolver} setOrdenActual={setOrdenActual} /> : <Navigate to="/ordenes" />} />
         <Route path="/verificacion" element={ordenActual ? <Verificacion orden={ordenActual} setOrdenActual={setOrdenActual} /> : <Navigate to="/ordenes" />} />
         {/* Página de inicio / dashboard */}
         <Route path="/inicio" element={<Inicio />} />
