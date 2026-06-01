@@ -5,6 +5,37 @@ import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 @Service()
 export class OrdenRepository {
+
+    async findPaginated(
+        filters: OrdenFilters,
+        page: number,
+        limit: number
+    ): Promise<{ data: any[]; totalItems: number }> {
+        const offset = (page - 1) * limit;
+        const { whereSql, params } = buildOrdenWhere(filters);
+
+        // totalItems equivale a COUNT(*) con los mismos filtros
+        const countQuery = `
+            SELECT COUNT(*) AS totalItems
+            FROM Orden_produccion o
+            JOIN Producto p ON o.Id_producto = p.Id_producto
+            ${whereSql}
+        `;
+        const [countRows] = await pool.query<RowDataPacket[]>(countQuery, params);
+        const totalItems = Number((countRows[0] as any)?.totalItems ?? 0);
+
+        const selectQuery = `
+            SELECT o.*, p.Nombre_producto
+            FROM Orden_produccion o
+            JOIN Producto p ON o.Id_producto = p.Id_producto
+            ${whereSql}
+            ORDER BY o.FechaInicio_ordenProd DESC
+            LIMIT ? OFFSET ?
+        `;
+        const [rows] = await pool.query<RowDataPacket[]>(selectQuery, [...params, limit, offset]);
+
+        return { data: rows as any[], totalItems };
+    }
     
     /**
      * Obtiene todas las órdenes de producción.
@@ -136,4 +167,65 @@ export class OrdenRepository {
         const [result] = await pool.query<ResultSetHeader>('DELETE FROM Orden_produccion WHERE Id_ordenProd = ?', [id]);
         return result.affectedRows > 0;
     }
+}
+
+export type OrdenFilters = {
+    // Filtro genérico para buscador global
+    filtro?: string;
+    codigo_ordenProd?: string;
+    lote_ordenProd?: string;
+    estado_ordenProd?: string;
+    codigo_producto?: string;
+    fechaInicio_ordenProd?: string;
+    fechaCierre_ordenProd?: string;
+};
+
+function buildOrdenWhere(filters: OrdenFilters): { whereSql: string; params: any[] } {
+    const whereParts: string[] = [];
+    const params: any[] = [];
+
+    if (filters.filtro) {
+        const like = `%${filters.filtro}%`;
+        whereParts.push(`
+            (o.Codigo_ordenProd LIKE ?
+            OR o.Lote_ordenProd LIKE ?
+            OR o.Estado_ordenProd LIKE ?
+            OR p.Codigo_producto LIKE ?)
+        `);
+        params.push(like, like, like, like);
+    }
+
+    if (filters.codigo_ordenProd) {
+        whereParts.push('o.Codigo_ordenProd = ?');
+        params.push(filters.codigo_ordenProd);
+    }
+
+    if (filters.lote_ordenProd) {
+        whereParts.push('o.Lote_ordenProd = ?');
+        params.push(filters.lote_ordenProd);
+    }
+
+    if (filters.estado_ordenProd) {
+        whereParts.push('o.Estado_ordenProd = ?');
+        params.push(filters.estado_ordenProd);
+    }
+
+    if (filters.codigo_producto) {
+        whereParts.push('p.Codigo_producto LIKE ?');
+        params.push(`%${filters.codigo_producto}%`);
+    }
+
+    if (filters.fechaInicio_ordenProd) {
+        whereParts.push('o.FechaInicio_ordenProd LIKE ?');
+        // Permite filtrar por prefijo (p.ej. YYYY-MM)
+        params.push(`${filters.fechaInicio_ordenProd}%`);
+    }
+
+    if (filters.fechaCierre_ordenProd) {
+        whereParts.push('o.FechaCierre_ordenProd LIKE ?');
+        params.push(`${filters.fechaCierre_ordenProd}%`);
+    }
+
+    const whereSql = whereParts.length > 0 ? `WHERE ${whereParts.join(' AND ')}` : '';
+    return { whereSql, params };
 }
