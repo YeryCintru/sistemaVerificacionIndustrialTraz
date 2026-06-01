@@ -40,5 +40,18 @@ services:
       db:
         condition: service_healthy
 
+  panel:
+    build:
+      context: ./panel
+      dockerfile: Dockerfile
+    container_name: trazabilidad_panel
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      - VITE_BACKEND_URL=http://api:3000
+    depends_on:
+      - api
+
 volumes:
   mysql_data:
