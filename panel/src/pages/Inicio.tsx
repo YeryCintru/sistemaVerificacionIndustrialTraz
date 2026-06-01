@@ -4,10 +4,10 @@ import { BotonLogout } from '../components/BotonLogout';
 import type { LoginResponse } from '../services/api';
 
 const navItems = [
-  { id: 'btn-ordenes', label: 'Órdenes de Producción', route: '/ordenes' },
-  { id: 'btn-auditoria', label: 'Auditoría', route: '/auditoria' },
-  { id: 'btn-producto', label: 'Producto', route: '/productos' },
-  { id: 'btn-operario', label: 'Operario', route: '/operarios' },
+  { id: 'btn-ordenes', label: '📄 Órdenes de Producción', route: '/ordenes' },
+  { id: 'btn-producto', label: '📦 Producto', route: '/productos' },
+  { id: 'btn-auditoria', label: '🔍 Auditoría', route: '/auditoria' },
+  { id: 'btn-operario', label: '👤 Operario', route: '/operarios' },
 ];
 
 export function Inicio() {
