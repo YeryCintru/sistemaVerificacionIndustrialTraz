@@ -187,3 +187,85 @@ export async function getProducto(id: number): Promise<Producto> {
   const response = await axios.get<Producto>(`${BASE_URL}/api/productos/${id}`);
   return response.data;
 }
+
+export interface CrearProductoPayload {
+  nombre_producto: string;
+  codigo_producto?: string;
+  estado_producto?: string;
+  verificador_producto?: string;
+  documentacion_producto?: string;
+}
+
+export interface ActualizarProductoPayload {
+  nombre_producto?: string;
+  estado_producto?: string;
+  verificador_producto?: string;
+  documentacion_producto?: string;
+}
+
+export async function crearProducto(data: CrearProductoPayload): Promise<Producto> {
+  const response = await axios.post<Producto>(`${BASE_URL}/api/productos/`, data);
+  return response.data;
+}
+
+export async function actualizarProducto(id: number, data: ActualizarProductoPayload): Promise<Producto> {
+  const response = await axios.put<Producto>(`${BASE_URL}/api/productos/${id}`, data);
+  return response.data;
+}
+
+/** Normaliza campos que pueden venir en PascalCase (MySQL) o camelCase del servicio */
+export function idProducto(p: Producto): number | undefined {
+  return p.Id_producto ?? (p as Producto & { id_producto?: number }).id_producto;
+}
+
+export function codigoProducto(p: Producto): string {
+  return p.Codigo_producto ?? (p as Producto & { codigo_producto?: string }).codigo_producto ?? '';
+}
+
+export function nombreProducto(p: Producto): string {
+  return p.Nombre_producto ?? (p as Producto & { nombre_producto?: string }).nombre_producto ?? '';
+}
+
+export function estadoProducto(p: Producto): string {
+  return p.Estado_producto ?? (p as Producto & { estado_producto?: string }).estado_producto ?? '';
+}
+
+export interface RegistroAuditoria {
+  Id_log?: number;
+  Numero_log?: string;
+  Accion_log: string;
+  Resultado_log: string;
+  Momento_log?: string | Date;
+  Comentarios_log?: string;
+  Id_operario?: number;
+  Id_ordenProd?: number;
+  Id_producto?: number;
+  Nombre_operario?: string;
+  Lote_ordenProd?: string;
+  Nombre_producto?: string;
+}
+
+export async function getAuditoria(): Promise<RegistroAuditoria[]> {
+  const response = await axios.get<RegistroAuditoria[]>(`${BASE_URL}/api/audit/`);
+  return response.data;
+}
+
+export function numeroLog(r: RegistroAuditoria): string {
+  return r.Numero_log ?? (r as RegistroAuditoria & { numero_log?: string }).numero_log ?? '-';
+}
+
+export function accionLog(r: RegistroAuditoria): string {
+  return r.Accion_log ?? (r as RegistroAuditoria & { accion_log?: string }).accion_log ?? '';
+}
+
+export function resultadoLog(r: RegistroAuditoria): string {
+  return r.Resultado_log ?? (r as RegistroAuditoria & { resultado_log?: string }).resultado_log ?? '';
+}
+
+export function momentoLog(r: RegistroAuditoria): string | Date | undefined {
+  return r.Momento_log ?? (r as RegistroAuditoria & { momento_log?: string }).momento_log;
+}
+
+export function comentariosLog(r: RegistroAuditoria): string {
+  return r.Comentarios_log ?? (r as RegistroAuditoria & { comentarios_log?: string }).comentarios_log ?? '';
+}
