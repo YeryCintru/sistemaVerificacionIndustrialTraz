@@ -12,14 +12,6 @@ import type { Producto } from '../services/api';
 
 const PAGE_SIZE = 20;
 const ESTADOS_PRODUCTO = ['Correcto', 'Bloqueado', 'Baja'] as const;
-type EstadoFiltro = '' | (typeof ESTADOS_PRODUCTO)[number];
-
-function coincideFecha(fechaIso: string | Date | undefined, fechaFiltro: string): boolean {
-  if (!fechaFiltro) return true;
-  if (!fechaIso) return false;
-  const fecha = fechaIso instanceof Date ? fechaIso : new Date(fechaIso);
-  return fecha.toISOString().slice(0, 10) === fechaFiltro;
-}
 
 function formatearFecha(fechaIso: string | Date | undefined): string {
   if (!fechaIso) return '-';
@@ -43,9 +35,9 @@ export function Productos({ onSeleccionar }: ProductosProps) {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
 
-  const [filtroBusqueda, setFiltroBusqueda] = React.useState('');
-  const [filtroEstado, setFiltroEstado] = React.useState<EstadoFiltro>('');
-  const [filtroFecha, setFiltroFecha] = React.useState('');
+  const [filtroCodigo, setFiltroCodigo] = React.useState('');
+  const [filtroEstado, setFiltroEstado] = React.useState('');
+  const [filtroFechaCreacion, setFiltroFechaCreacion] = React.useState('');
   const [paginaActual, setPaginaActual] = React.useState(1);
 
   React.useEffect(() => {
@@ -66,34 +58,15 @@ export function Productos({ onSeleccionar }: ProductosProps) {
     return () => { cancelado = true; };
   }, []);
 
-  const productosFiltrados = React.useMemo(() => {
-    return productos.filter((p) => {
-      const busqueda = filtroBusqueda.trim().toLowerCase();
-      if (busqueda) {
-        const codigo = codigoProducto(p).toLowerCase();
-        const nombre = nombreProducto(p).toLowerCase();
-        if (!codigo.includes(busqueda) && !nombre.includes(busqueda)) return false;
-      }
-      if (filtroEstado && estadoProducto(p) !== filtroEstado) return false;
-      const fechaCreacion = p.FechaCreacion_producto ?? (p as Producto & { fechaCreacion_producto?: string }).fechaCreacion_producto;
-      if (!coincideFecha(fechaCreacion, filtroFecha)) return false;
-      return true;
-    });
-  }, [productos, filtroBusqueda, filtroEstado, filtroFecha]);
-
-  const totalPaginas = Math.max(1, Math.ceil(productosFiltrados.length / PAGE_SIZE));
+  const totalPaginas = Math.max(1, Math.ceil(productos.length / PAGE_SIZE));
 
   React.useEffect(() => {
     if (paginaActual > totalPaginas) setPaginaActual(totalPaginas);
   }, [paginaActual, totalPaginas]);
 
-  React.useEffect(() => {
-    setPaginaActual(1);
-  }, [filtroBusqueda, filtroEstado, filtroFecha]);
-
   const indiceInicio = (paginaActual - 1) * PAGE_SIZE;
-  const indiceFin = Math.min(indiceInicio + PAGE_SIZE, productosFiltrados.length);
-  const productosPagina = productosFiltrados.slice(indiceInicio, indiceFin);
+  const indiceFin = Math.min(indiceInicio + PAGE_SIZE, productos.length);
+  const productosPagina = productos.slice(indiceInicio, indiceFin);
 
   const handleVer = (producto: Producto) => {
     onSeleccionar(producto);
@@ -114,8 +87,8 @@ export function Productos({ onSeleccionar }: ProductosProps) {
     return paginas;
   }, [paginaActual, totalPaginas]);
 
-  const totalFormateado = productosFiltrados.length.toLocaleString('es-ES');
-  const rangoInicio = productosFiltrados.length === 0 ? 0 : indiceInicio + 1;
+  const totalFormateado = productos.length.toLocaleString('es-ES');
+  const rangoInicio = productos.length === 0 ? 0 : indiceInicio + 1;
   const rangoFin = indiceFin;
 
   return (
@@ -133,13 +106,13 @@ export function Productos({ onSeleccionar }: ProductosProps) {
         </div>
 
         <div style={filtrosBox}>
-          <div style={{ flex: '1 1 220px' }}>
-            <label style={labelStyle}>Código o nombre</label>
+          <div style={{ flex: '1 1 200px' }}>
+            <label style={labelStyle}>Código</label>
             <input
               type="text"
-              placeholder="Buscar producto..."
-              value={filtroBusqueda}
-              onChange={(e) => setFiltroBusqueda(e.target.value)}
+              placeholder="Ej: PROD-1"
+              value={filtroCodigo}
+              onChange={(e) => setFiltroCodigo(e.target.value)}
               style={inputStyle}
             />
           </div>
@@ -147,8 +120,8 @@ export function Productos({ onSeleccionar }: ProductosProps) {
             <label style={labelStyle}>Estado</label>
             <select
               value={filtroEstado}
-              onChange={(e) => setFiltroEstado(e.target.value as EstadoFiltro)}
-              style={inputStyle}
+              onChange={(e) => setFiltroEstado(e.target.value)}
+              style={{ ...inputStyle, backgroundColor: 'white', cursor: 'pointer' }}
             >
               <option value="">Todos</option>
               {ESTADOS_PRODUCTO.map((e) => (
@@ -157,22 +130,24 @@ export function Productos({ onSeleccionar }: ProductosProps) {
             </select>
           </div>
           <div style={{ flex: '0 1 180px' }}>
-            <label style={labelStyle}>Fecha de creación</label>
+            <label style={labelStyle}>Fecha creación</label>
             <input
               type="date"
-              value={filtroFecha}
-              onChange={(e) => setFiltroFecha(e.target.value)}
+              value={filtroFechaCreacion}
+              onChange={(e) => setFiltroFechaCreacion(e.target.value)}
               style={inputStyle}
             />
           </div>
-          {(filtroBusqueda || filtroEstado || filtroFecha) && (
+          <button type="button" style={btnBuscar}>Buscar</button>
+          {(filtroCodigo || filtroEstado || filtroFechaCreacion) && (
             <button
+              type="button"
               onClick={() => {
-                setFiltroBusqueda('');
+                setFiltroCodigo('');
                 setFiltroEstado('');
-                setFiltroFecha('');
+                setFiltroFechaCreacion('');
               }}
-              style={btnLimpiar}
+              style={{ ...btnLimpiar, alignSelf: 'flex-end' }}
             >
               Limpiar filtros
             </button>
@@ -200,7 +175,7 @@ export function Productos({ onSeleccionar }: ProductosProps) {
                 {productosPagina.length === 0 ? (
                   <tr>
                     <td colSpan={6} style={{ textAlign: 'center', padding: '32px', color: '#666' }}>
-                      No hay productos que coincidan con los filtros.
+                      No hay productos registrados.
                     </td>
                   </tr>
                 ) : (
@@ -345,6 +320,18 @@ const btnCrear: React.CSSProperties = {
   border: 'none',
   borderRadius: '4px',
   cursor: 'pointer',
+};
+
+const btnBuscar: React.CSSProperties = {
+  padding: '10px 24px',
+  fontSize: '14px',
+  fontWeight: 'bold',
+  backgroundColor: '#007bff',
+  color: 'white',
+  border: 'none',
+  borderRadius: '4px',
+  cursor: 'pointer',
+  alignSelf: 'flex-end',
 };
 
 const btnLimpiar: React.CSSProperties = {

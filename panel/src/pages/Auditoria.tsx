@@ -13,13 +13,6 @@ import type { RegistroAuditoria } from '../services/api';
 
 const PAGE_SIZE = 20;
 
-function coincideFecha(fechaIso: string | Date | undefined, fechaFiltro: string): boolean {
-  if (!fechaFiltro) return true;
-  if (!fechaIso) return false;
-  const fecha = fechaIso instanceof Date ? fechaIso : new Date(fechaIso);
-  return fecha.toISOString().slice(0, 10) === fechaFiltro;
-}
-
 function formatearFechaHora(fechaIso: string | Date | undefined): string {
   if (!fechaIso) return '-';
   const fecha = fechaIso instanceof Date ? fechaIso : new Date(fechaIso);
@@ -49,9 +42,13 @@ export function Auditoria() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
 
-  const [filtroBusqueda, setFiltroBusqueda] = React.useState('');
-  const [filtroResultado, setFiltroResultado] = React.useState('');
   const [filtroFecha, setFiltroFecha] = React.useState('');
+  const [filtroResultado, setFiltroResultado] = React.useState('');
+  const [filtroAccion, setFiltroAccion] = React.useState('');
+  const [filtroOperario, setFiltroOperario] = React.useState('');
+  const [filtroCodigoOrden, setFiltroCodigoOrden] = React.useState('');
+  const [filtroLote, setFiltroLote] = React.useState('');
+  const [filtroProducto, setFiltroProducto] = React.useState('');
   const [paginaActual, setPaginaActual] = React.useState(1);
   const [detalle, setDetalle] = React.useState<RegistroAuditoria | null>(null);
 
@@ -78,40 +75,34 @@ export function Auditoria() {
     return Array.from(set).sort();
   }, [registros]);
 
-  const registrosFiltrados = React.useMemo(() => {
-    return registros.filter((r) => {
-      const busqueda = filtroBusqueda.trim().toLowerCase();
-      if (busqueda) {
-        const campos = [
-          numeroLog(r),
-          accionLog(r),
-          resultadoLog(r),
-          comentariosLog(r),
-          r.Nombre_operario ?? '',
-          r.Lote_ordenProd ?? '',
-          r.Nombre_producto ?? '',
-        ].map((c) => c.toLowerCase());
-        if (!campos.some((c) => c.includes(busqueda))) return false;
-      }
-      if (filtroResultado && resultadoLog(r) !== filtroResultado) return false;
-      if (!coincideFecha(momentoLog(r), filtroFecha)) return false;
-      return true;
-    });
-  }, [registros, filtroBusqueda, filtroResultado, filtroFecha]);
+  const accionesUnicas = React.useMemo(() => {
+    const set = new Set(registros.map((r) => accionLog(r)).filter(Boolean));
+    return Array.from(set).sort();
+  }, [registros]);
 
-  const totalPaginas = Math.max(1, Math.ceil(registrosFiltrados.length / PAGE_SIZE));
+  const operariosUnicos = React.useMemo(() => {
+    const set = new Set(registros.map((r) => r.Nombre_operario).filter(Boolean) as string[]);
+    return Array.from(set).sort();
+  }, [registros]);
+
+  const productosUnicos = React.useMemo(() => {
+    const set = new Set(registros.map((r) => r.Nombre_producto).filter(Boolean) as string[]);
+    return Array.from(set).sort();
+  }, [registros]);
+
+  const hayFiltrosActivos =
+    filtroFecha || filtroResultado || filtroAccion || filtroOperario
+    || filtroCodigoOrden || filtroLote || filtroProducto;
+
+  const totalPaginas = Math.max(1, Math.ceil(registros.length / PAGE_SIZE));
 
   React.useEffect(() => {
     if (paginaActual > totalPaginas) setPaginaActual(totalPaginas);
   }, [paginaActual, totalPaginas]);
 
-  React.useEffect(() => {
-    setPaginaActual(1);
-  }, [filtroBusqueda, filtroResultado, filtroFecha]);
-
   const indiceInicio = (paginaActual - 1) * PAGE_SIZE;
-  const indiceFin = Math.min(indiceInicio + PAGE_SIZE, registrosFiltrados.length);
-  const registrosPagina = registrosFiltrados.slice(indiceInicio, indiceFin);
+  const indiceFin = Math.min(indiceInicio + PAGE_SIZE, registros.length);
+  const registrosPagina = registros.slice(indiceInicio, indiceFin);
 
   const irAPagina = (pagina: number) => {
     if (pagina >= 1 && pagina <= totalPaginas) setPaginaActual(pagina);
@@ -127,8 +118,8 @@ export function Auditoria() {
     return paginas;
   }, [paginaActual, totalPaginas]);
 
-  const totalFormateado = registrosFiltrados.length.toLocaleString('es-ES');
-  const rangoInicio = registrosFiltrados.length === 0 ? 0 : indiceInicio + 1;
+  const totalFormateado = registros.length.toLocaleString('es-ES');
+  const rangoInicio = registros.length === 0 ? 0 : indiceInicio + 1;
   const rangoFin = indiceFin;
 
   return (
@@ -144,30 +135,7 @@ export function Auditoria() {
         </p>
 
         <div style={filtrosBox}>
-          <div style={{ flex: '1 1 240px' }}>
-            <label style={labelStyle}>Buscar</label>
-            <input
-              type="text"
-              placeholder="Nº log, acción, operario, lote..."
-              value={filtroBusqueda}
-              onChange={(e) => setFiltroBusqueda(e.target.value)}
-              style={inputStyle}
-            />
-          </div>
-          <div style={{ flex: '0 1 180px' }}>
-            <label style={labelStyle}>Resultado</label>
-            <select
-              value={filtroResultado}
-              onChange={(e) => setFiltroResultado(e.target.value)}
-              style={inputStyle}
-            >
-              <option value="">Todos</option>
-              {resultadosUnicos.map((res) => (
-                <option key={res} value={res}>{res}</option>
-              ))}
-            </select>
-          </div>
-          <div style={{ flex: '0 1 180px' }}>
+          <div style={{ flex: '0 1 160px' }}>
             <label style={labelStyle}>Fecha</label>
             <input
               type="date"
@@ -176,14 +144,92 @@ export function Auditoria() {
               style={inputStyle}
             />
           </div>
-          {(filtroBusqueda || filtroResultado || filtroFecha) && (
+          <div style={{ flex: '0 1 160px' }}>
+            <label style={labelStyle}>Resultado</label>
+            <select
+              value={filtroResultado}
+              onChange={(e) => setFiltroResultado(e.target.value)}
+              style={{ ...inputStyle, backgroundColor: 'white', cursor: 'pointer' }}
+            >
+              <option value="">Todos</option>
+              {resultadosUnicos.map((res) => (
+                <option key={res} value={res}>{res}</option>
+              ))}
+            </select>
+          </div>
+          <div style={{ flex: '0 1 180px' }}>
+            <label style={labelStyle}>Acción</label>
+            <select
+              value={filtroAccion}
+              onChange={(e) => setFiltroAccion(e.target.value)}
+              style={{ ...inputStyle, backgroundColor: 'white', cursor: 'pointer' }}
+            >
+              <option value="">Todas</option>
+              {accionesUnicas.map((acc) => (
+                <option key={acc} value={acc}>{acc}</option>
+              ))}
+            </select>
+          </div>
+          <div style={{ flex: '0 1 180px' }}>
+            <label style={labelStyle}>Operario</label>
+            <select
+              value={filtroOperario}
+              onChange={(e) => setFiltroOperario(e.target.value)}
+              style={{ ...inputStyle, backgroundColor: 'white', cursor: 'pointer' }}
+            >
+              <option value="">Todos</option>
+              {operariosUnicos.map((op) => (
+                <option key={op} value={op}>{op}</option>
+              ))}
+            </select>
+          </div>
+          <div style={{ flex: '1 1 160px' }}>
+            <label style={labelStyle}>Código orden</label>
+            <input
+              type="text"
+              placeholder="Ej: ORD-2026-1"
+              value={filtroCodigoOrden}
+              onChange={(e) => setFiltroCodigoOrden(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+          <div style={{ flex: '1 1 140px' }}>
+            <label style={labelStyle}>Lote</label>
+            <input
+              type="text"
+              placeholder="Ej: L-2026-1"
+              value={filtroLote}
+              onChange={(e) => setFiltroLote(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+          <div style={{ flex: '1 1 180px' }}>
+            <label style={labelStyle}>Producto</label>
+            <select
+              value={filtroProducto}
+              onChange={(e) => setFiltroProducto(e.target.value)}
+              style={{ ...inputStyle, backgroundColor: 'white', cursor: 'pointer' }}
+            >
+              <option value="">Todos</option>
+              {productosUnicos.map((prod) => (
+                <option key={prod} value={prod}>{prod}</option>
+              ))}
+            </select>
+          </div>
+          <button type="button" style={btnBuscar}>Buscar</button>
+          {hayFiltrosActivos && (
             <button
+              type="button"
               onClick={() => {
-                setFiltroBusqueda('');
-                setFiltroResultado('');
                 setFiltroFecha('');
+                setFiltroResultado('');
+                setFiltroAccion('');
+                setFiltroOperario('');
+                setFiltroCodigoOrden('');
+                setFiltroLote('');
+                setFiltroProducto('');
               }}
-              style={btnLimpiar}
+              style={{ ...btnLimpiar, alignSelf: 'flex-end' }}
             >
               Limpiar filtros
             </button>
@@ -212,7 +258,7 @@ export function Auditoria() {
                 {registrosPagina.length === 0 ? (
                   <tr>
                     <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: '#666' }}>
-                      No hay registros que coincidan con los filtros.
+                      No hay registros de auditoría.
                     </td>
                   </tr>
                 ) : (
@@ -398,6 +444,18 @@ const btnVolver: React.CSSProperties = {
   borderRadius: '4px',
   cursor: 'pointer',
   marginBottom: '20px',
+};
+
+const btnBuscar: React.CSSProperties = {
+  padding: '10px 24px',
+  fontSize: '14px',
+  fontWeight: 'bold',
+  backgroundColor: '#007bff',
+  color: 'white',
+  border: 'none',
+  borderRadius: '4px',
+  cursor: 'pointer',
+  alignSelf: 'flex-end',
 };
 
 const btnLimpiar: React.CSSProperties = {
