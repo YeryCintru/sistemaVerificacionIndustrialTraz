@@ -34,6 +34,13 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
   const [filtroFechaFinal, setFiltroFechaFinal] = React.useState('');
   const [filtroProducto, setFiltroProducto] = React.useState('');
   const [paginaActual, setPaginaActual] = React.useState(1);
+  const [filtrosAplicados, setFiltrosAplicados] = React.useState({
+    lote: '',
+    estado: '',
+    fechaInicio: '',
+    fechaFinal: '',
+    producto: '',
+  });
 
   React.useEffect(() => {
     let cancelado = false;
@@ -41,7 +48,15 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
       setLoading(true);
       setError('');
       try {
-        const response = await getOrdenesPaginated({ page: paginaActual, limit: PAGE_SIZE });
+        const response = await getOrdenesPaginated({
+          page: paginaActual,
+          limit: PAGE_SIZE,
+          lote_ordenProd: filtrosAplicados.lote || undefined,
+          estado_ordenProd: filtrosAplicados.estado || undefined,
+          codigo_producto: filtrosAplicados.producto || undefined,
+          fechaInicio_ordenProd: filtrosAplicados.fechaInicio || undefined,
+          fechaCierre_ordenProd: filtrosAplicados.fechaFinal || undefined,
+        });
         if (!cancelado) {
           setOrdenes(response.data);
           setTotalItems(response.totalItems);
@@ -55,11 +70,38 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
     };
     cargar();
     return () => { cancelado = true; };
-  }, [paginaActual]);
+  }, [paginaActual, filtrosAplicados]);
 
   const handleSeleccionarOrden = (orden: OrdenProduccion) => {
     onSeleccionar(orden);
     navigate('/detalle');
+  };
+
+  const handleBuscar = () => {
+    setFiltrosAplicados({
+      lote: filtroLote,
+      estado: filtroEstado,
+      fechaInicio: filtroFecha,
+      fechaFinal: filtroFechaFinal,
+      producto: filtroProducto,
+    });
+    setPaginaActual(1);
+  };
+
+  const handleLimpiarFiltros = () => {
+    setFiltroLote('');
+    setFiltroEstado('');
+    setFiltroFecha('');
+    setFiltroFechaFinal('');
+    setFiltroProducto('');
+    setFiltrosAplicados({
+      lote: '',
+      estado: '',
+      fechaInicio: '',
+      fechaFinal: '',
+      producto: '',
+    });
+    setPaginaActual(1);
   };
 
   const irAPagina = (pagina: number) => {
@@ -80,12 +122,7 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
   const totalFormateado = totalItems.toLocaleString('es-ES');
   const rangoInicio = totalItems === 0 ? 0 : (paginaActual - 1) * PAGE_SIZE + 1;
   const rangoFin = totalItems === 0 ? 0 : Math.min((paginaActual - 1) * PAGE_SIZE + ordenes.length, totalItems);
-
-  const productosUnicos = React.useMemo(() => {
-    const nombres = new Set(ordenes.map((o) => o.Nombre_producto).filter(Boolean));
-    return Array.from(nombres).sort();
-  }, [ordenes]);
-
+  
   const inputFiltroStyle: React.CSSProperties = {
     width: '100%',
     padding: '10px 12px',
@@ -186,16 +223,13 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
             <label style={{ display: 'block', fontWeight: 'bold', color: '#666', fontSize: '14px', marginBottom: '6px' }}>
               Producto
             </label>
-            <select
+            <input
+              type="text"
+              placeholder="Buscar por producto..."
               value={filtroProducto}
               onChange={(e) => setFiltroProducto(e.target.value)}
               style={{ ...inputFiltroStyle, backgroundColor: 'white', cursor: 'pointer' }}
-            >
-              <option value="">Todos</option>
-              {productosUnicos.map((nombre) => (
-                <option key={nombre} value={nombre}>{nombre}</option>
-              ))}
-            </select>
+            />
           </div>
 
           <div style={{ flex: '0 1 180px' }}>
@@ -240,6 +274,7 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
 
           <button
             type="button"
+            onClick={handleBuscar}
             style={{
               padding: '10px 24px',
               fontSize: '14px',
@@ -257,13 +292,7 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
 
           {(filtroLote || filtroEstado || filtroFecha || filtroFechaFinal || filtroProducto) && (
             <button
-              onClick={() => {
-                setFiltroLote('');
-                setFiltroEstado('');
-                setFiltroFecha('');
-                setFiltroFechaFinal('');
-                setFiltroProducto('');
-              }}
+              onClick={handleLimpiarFiltros}
               style={{
                 padding: '10px 16px',
                 fontSize: '14px',
