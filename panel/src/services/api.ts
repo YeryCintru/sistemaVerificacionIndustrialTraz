@@ -134,8 +134,51 @@ export interface CrearOrdenPayload {
   comentarios_ordenProd?: string;
 }
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  totalItems: number;
+  totalPages: number;
+  currentPage: number;
+}
+
+/** Parámetros de query para GET /api/ordenesprod (paginación y filtros en servidor) */
+export interface GetOrdenesParams {
+  page?: number;
+  limit?: number;
+  filtro?: string;
+  codigo_ordenProd?: string;
+  lote_ordenProd?: string;
+  estado_ordenProd?: string;
+  codigo_producto?: string;
+  fechaInicio_ordenProd?: string;
+  fechaCierre_ordenProd?: string;
+}
+
 export async function getOrdenes(): Promise<OrdenProduccion[]> {
   const response = await axios.get<OrdenProduccion[]>(`${BASE_URL}/api/ordenesprod/`);
+  return response.data;
+}
+
+/**
+ * Listado paginado de órdenes (GET /api/ordenesprod).
+ * Misma ruta que getOrdenes; el backend devuelve { data, totalItems, totalPages, currentPage }.
+ */
+export async function getOrdenesPaginated(
+  params: GetOrdenesParams = {}
+): Promise<PaginatedResponse<OrdenProduccion>> {
+  const searchParams = new URLSearchParams();
+  (Object.entries(params) as [keyof GetOrdenesParams, GetOrdenesParams[keyof GetOrdenesParams]][]).forEach(
+    ([key, value]) => {
+      if (value !== undefined && value !== null && String(value).trim() !== '') {
+        searchParams.append(key, String(value));
+      }
+    }
+  );
+  const query = searchParams.toString();
+  const url = query
+    ? `${BASE_URL}/api/ordenesprod?${query}`
+    : `${BASE_URL}/api/ordenesprod/`;
+  const response = await axios.get<PaginatedResponse<OrdenProduccion>>(url);
   return response.data;
 }
 
