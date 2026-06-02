@@ -1,21 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BotonLogout } from '../components/BotonLogout';
-import { getOrdenes } from '../services/api';
+import { getOrdenesPaginated } from '../services/api';
 import type { OrdenProduccion } from '../services/api';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 15;
 
 const ESTADOS_ORDEN = ['Pendiente', 'En Progreso', 'Cerrada'] as const;
 type EstadoFiltro = '' | (typeof ESTADOS_ORDEN)[number];
 
 
-
-function coincideFecha(fechaIso: string | undefined, fechaFiltro: string): boolean {
-  if (!fechaFiltro) return true;
-  if (!fechaIso) return false;
-  return new Date(fechaIso).toISOString().slice(0, 10) === fechaFiltro;
-}
 
 function formatearFecha(fechaIso: string | undefined): string {
   if (!fechaIso) return '-';
@@ -45,8 +39,8 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
       setLoading(true);
       setError('');
       try {
-        const data = await getOrdenes();
-        if (!cancelado) setOrdenes(data);
+        const data = await getOrdenesPaginated({ page: paginaActual, limit: PAGE_SIZE });
+        if (!cancelado) setOrdenes(data.data);
       } catch {
         if (!cancelado) setError('No se pudieron cargar las órdenes de producción.');
       } finally {
@@ -57,35 +51,15 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
     return () => { cancelado = true; };
   }, []);
 
-  const ordenesFiltradas = React.useMemo(() => {
-    return ordenes.filter((orden) => {
-      const lote = orden.Lote_ordenProd?.toLowerCase() ?? '';
-      const busqueda = filtroLote.trim().toLowerCase();
-      if (busqueda && !lote.includes(busqueda)) return false;
-
-      if (filtroEstado && orden.Estado_ordenProd !== filtroEstado) return false;
-
-      if (!coincideFecha(orden.FechaInicio_ordenProd, filtroFecha)) return false;
-
-      return true;
-    });
-  }, [ordenes, filtroLote, filtroEstado, filtroFecha]);
-
-  //Sacar el número de páginas
-  const totalPaginas = Math.max(1, Math.ceil(ordenesFiltradas.length / PAGE_SIZE));
+  const totalPaginas = Math.max(1, Math.ceil(ordenes.length / PAGE_SIZE));
 
   React.useEffect(() => {
     if (paginaActual > totalPaginas) setPaginaActual(totalPaginas);
   }, [paginaActual, totalPaginas]);
 
-  React.useEffect(() => {
-    setPaginaActual(1);
-  }, [filtroLote, filtroEstado, filtroFecha]);
-
-  //Lógica de paginación
   const indiceInicio = (paginaActual - 1) * PAGE_SIZE;
-  const indiceFin = Math.min(indiceInicio + PAGE_SIZE, ordenesFiltradas.length);
-  const ordenesPagina = ordenesFiltradas.slice(indiceInicio, indiceFin);
+  const indiceFin = Math.min(indiceInicio + PAGE_SIZE, ordenes.length);
+  const ordenesPagina = ordenes.slice(indiceInicio, indiceFin);
 
   const handleSeleccionarOrden = (orden: OrdenProduccion) => {
     onSeleccionar(orden);
@@ -96,6 +70,7 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
     if (pagina >= 1 && pagina <= totalPaginas) setPaginaActual(pagina);
   };
 
+  // Paginas visibles en el paginador
   const paginasVisibles = React.useMemo(() => {
     const maxVisibles = 5;
     let inicio = Math.max(1, paginaActual - Math.floor(maxVisibles / 2));
@@ -106,8 +81,8 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
     return paginas;
   }, [paginaActual, totalPaginas]);
 
-  const totalFormateado = ordenesFiltradas.length.toLocaleString('es-ES');
-  const rangoInicio = ordenesFiltradas.length === 0 ? 0 : indiceInicio + 1;
+  const totalFormateado = ordenes.length.toLocaleString('es-ES');
+  const rangoInicio = ordenes.length === 0 ? 0 : indiceInicio + 1;
   const rangoFin = indiceFin;
 
   const productosUnicos = React.useMemo(() => {
@@ -338,7 +313,7 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
                 {ordenesPagina.length === 0 ? (
                   <tr>
                     <td colSpan={8} style={{ textAlign: 'center', padding: '32px', color: '#666' }}>
-                      No hay órdenes que coincidan con los filtros.
+                      No hay órdenes de producción.
                     </td>
                   </tr>
                 ) : (
