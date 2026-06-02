@@ -23,6 +23,8 @@ interface OrdenesProps {
 export function Ordenes({ onSeleccionar }: OrdenesProps) {
   const navigate = useNavigate();
   const [ordenes, setOrdenes] = React.useState<OrdenProduccion[]>([]);
+  const [totalItems, setTotalItems] = React.useState(0);
+  const [totalPaginas, setTotalPaginas] = React.useState(1);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
 
@@ -39,8 +41,12 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
       setLoading(true);
       setError('');
       try {
-        const data = await getOrdenesPaginated({ page: paginaActual, limit: PAGE_SIZE });
-        if (!cancelado) setOrdenes(data.data);
+        const response = await getOrdenesPaginated({ page: paginaActual, limit: PAGE_SIZE });
+        if (!cancelado) {
+          setOrdenes(response.data);
+          setTotalItems(response.totalItems);
+          setTotalPaginas(Math.max(1, response.totalPages));
+        }
       } catch {
         if (!cancelado) setError('No se pudieron cargar las órdenes de producción.');
       } finally {
@@ -49,17 +55,7 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
     };
     cargar();
     return () => { cancelado = true; };
-  }, []);
-
-  const totalPaginas = Math.max(1, Math.ceil(ordenes.length / PAGE_SIZE));
-
-  React.useEffect(() => {
-    if (paginaActual > totalPaginas) setPaginaActual(totalPaginas);
-  }, [paginaActual, totalPaginas]);
-
-  const indiceInicio = (paginaActual - 1) * PAGE_SIZE;
-  const indiceFin = Math.min(indiceInicio + PAGE_SIZE, ordenes.length);
-  const ordenesPagina = ordenes.slice(indiceInicio, indiceFin);
+  }, [paginaActual]);
 
   const handleSeleccionarOrden = (orden: OrdenProduccion) => {
     onSeleccionar(orden);
@@ -81,9 +77,9 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
     return paginas;
   }, [paginaActual, totalPaginas]);
 
-  const totalFormateado = ordenes.length.toLocaleString('es-ES');
-  const rangoInicio = ordenes.length === 0 ? 0 : indiceInicio + 1;
-  const rangoFin = indiceFin;
+  const totalFormateado = totalItems.toLocaleString('es-ES');
+  const rangoInicio = totalItems === 0 ? 0 : (paginaActual - 1) * PAGE_SIZE + 1;
+  const rangoFin = totalItems === 0 ? 0 : Math.min((paginaActual - 1) * PAGE_SIZE + ordenes.length, totalItems);
 
   const productosUnicos = React.useMemo(() => {
     const nombres = new Set(ordenes.map((o) => o.Nombre_producto).filter(Boolean));
@@ -310,14 +306,14 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
                 </tr>
               </thead>
               <tbody>
-                {ordenesPagina.length === 0 ? (
+                {ordenes.length === 0 ? (
                   <tr>
                     <td colSpan={8} style={{ textAlign: 'center', padding: '32px', color: '#666' }}>
                       No hay órdenes de producción.
                     </td>
                   </tr>
                 ) : (
-                  ordenesPagina.map((orden) => (
+                  ordenes.map((orden) => (
                       <tr
                         key={orden.Id_ordenProd ?? orden.Codigo_ordenProd}
                         style={{ borderBottom: '1px solid #eee' }}
