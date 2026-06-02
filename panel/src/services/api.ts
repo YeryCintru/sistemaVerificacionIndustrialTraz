@@ -293,6 +293,36 @@ export async function getAuditoria(): Promise<RegistroAuditoria[]> {
   return response.data;
 }
 
+export interface GetAuditoriaParams {
+  page?: number;
+  limit?: number;
+  accion_log?: string;
+  resultado_log?: string;
+  nombre_operario?: string;
+  lote_ordenProd?: string;
+  nombre_producto?: string;
+  momento_log?: string;
+}
+
+export async function getAuditoriaPaginated(
+  params: GetAuditoriaParams = {}
+): Promise<PaginatedResponse<RegistroAuditoria>> {
+  const searchParams = new URLSearchParams();
+  (Object.entries(params) as [keyof GetAuditoriaParams, GetAuditoriaParams[keyof GetAuditoriaParams]][]).forEach(
+    ([key, value]) => {
+      if (value !== undefined && value !== null && String(value).trim() !== '') {
+        searchParams.append(key, String(value));
+      }
+    }
+  );
+  const query = searchParams.toString();
+  const url = query
+    ? `${BASE_URL}/api/audit?${query}`
+    : `${BASE_URL}/api/audit/`;
+  const response = await axios.get<PaginatedResponse<RegistroAuditoria>>(url);
+  return response.data;
+}
+
 export function numeroLog(r: RegistroAuditoria): string {
   return r.Numero_log ?? (r as RegistroAuditoria & { numero_log?: string }).numero_log ?? '-';
 }
