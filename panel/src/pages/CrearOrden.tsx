@@ -1,15 +1,16 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BotonLogout } from '../components/BotonLogout';
-import { crearOrden, getProductos } from '../services/api';
+import { crearOrden, getProductoPorCodigo, codigoProducto, estadoProducto, idProducto as getIdProducto, nombreProducto } from '../services/api';
 import type { CrearOrdenPayload, LoginResponse, Producto } from '../services/api';
 
 const ROLES_CREAR = ['Admin', 'Supervisor'];
 
 export function CrearOrden() {
   const navigate = useNavigate();
-  const [productos, setProductos] = React.useState<Producto[]>([]);
-  const [cargandoProductos, setCargandoProductos] = React.useState(true);
+  const [codigoProductoBusqueda, setCodigoProductoBusqueda] = React.useState('');
+  const [productoSeleccionado, setProductoSeleccionado] = React.useState<Producto | null>(null);
+  const [buscandoProducto, setBuscandoProducto] = React.useState(false);
   const [enviando, setEnviando] = React.useState(false);
   const [error, setError] = React.useState('');
   const [exito, setExito] = React.useState('');
@@ -24,26 +25,34 @@ export function CrearOrden() {
   const usuario: LoginResponse | null = usuarioRaw ? JSON.parse(usuarioRaw) : null;
   const puedeCrear = usuario && ROLES_CREAR.includes(usuario.Rol_operario);
 
-  React.useEffect(() => {
-    let cancelado = false;
-    const cargar = async () => {
-      setCargandoProductos(true);
-      try {
-        const data = await getProductos();
-        if (!cancelado) {
-          setProductos(data);
-          if (data.length > 0 && data[0].Id_producto != null) {
-            setIdProducto(String(data[0].Id_producto));
-          }
-        }
-      } catch {
-        if (!cancelado) setError('No se pudieron cargar los productos.');
-      } finally {
-        if (!cancelado) setCargandoProductos(false);
+  const handleBuscarProducto = React.useCallback(async (codigo: string) => {
+    setCodigoProductoBusqueda(codigo);
+    if (!codigo.trim()) {
+      setProductoSeleccionado(null);
+      setIdProducto('');
+      return;
+    }
+
+    setBuscandoProducto(true);
+    try {
+      const producto = await getProductoPorCodigo(codigo.trim());
+      if (producto) {
+        setProductoSeleccionado(producto);
+        const id = getIdProducto(producto);
+        setIdProducto(id != null ? String(id) : '');
+        setError('');
+      } else {
+        setProductoSeleccionado(null);
+        setIdProducto('');
+        setError(`No se encontró producto con código: ${codigo}`);
       }
-    };
-    cargar();
-    return () => { cancelado = true; };
+    } catch {
+      setProductoSeleccionado(null);
+      setIdProducto('');
+      setError('Error al buscar el producto.');
+    } finally {
+      setBuscandoProducto(false);
+    }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,9 +65,14 @@ export function CrearOrden() {
       return;
     }
 
+    if (!productoSeleccionado || !idProducto) {
+      setError('Debes buscar y seleccionar un producto válido.');
+      return;
+    }
+
     const cantidadNum = Number(cantidad);
-    if (!idProducto || !cantidad || cantidadNum < 1) {
-      setError('Selecciona un producto e indica una cantidad válida (mínimo 1).');
+    if (!cantidad || cantidadNum < 1) {
+      setError('Indica una cantidad válida (mínimo 1).');
       return;
     }
 
@@ -79,6 +93,9 @@ export function CrearOrden() {
       setCodigoOrden('');
       setLote('');
       setComentarios('');
+      setCodigoProductoBusqueda('');
+      setProductoSeleccionado(null);
+      setIdProducto('');
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { error?: string } } };
       setError(axiosErr.response?.data?.error || 'Error al crear la orden. Intenta de nuevo.');
@@ -176,32 +193,41 @@ export function CrearOrden() {
         )}
 
         <form onSubmit={handleSubmit}>
-          <Campo label="Producto *">
-            <select
-              value={idProducto}
-              onChange={(e) => setIdProducto(e.target.value)}
-              disabled={cargandoProductos || enviando || !puedeCrear}
-              required
+          <Campo label="Código de producto *" hint="Escribe el código del producto para buscarlo (ej: PROD-1)">
+            <input
+              type="text"
+              placeholder="PROD-1"
+              value={codigoProductoBusqueda}
+              onChange={(e) => handleBuscarProducto(e.target.value)}
+              disabled={enviando || !puedeCrear}
               style={inputStyle}
-            >
-              {cargandoProductos ? (
-                <option value="">Cargando productos...</option>
-              ) : productos.length === 0 ? (
-                <option value="">No hay productos disponibles</option>
-              ) : (
-                productos.map((p) => (
-                  <option
-                    key={p.Id_producto}
-                    value={p.Id_producto}
-                    disabled={p.Estado_producto !== 'Correcto'}
-                  >
-                    {p.Codigo_producto} — {p.Nombre_producto}
-                    {p.Estado_producto !== 'Correcto' ? ` (${p.Estado_producto})` : ''}
-                  </option>
-                ))
-              )}
-            </select>
+            />
+            {buscandoProducto && (
+              <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#666' }}>Buscando...</p>
+            )}
           </Campo>
+
+          {productoSeleccionado && (
+            <div style={{
+              backgroundColor: '#e7f3ff',
+              border: '1px solid #b3d9ff',
+              color: '#004085',
+              padding: '12px',
+              borderRadius: '4px',
+              marginBottom: '20px',
+              fontSize: '14px',
+            }}>
+              <p style={{ margin: '0 0 6px 0', fontWeight: 'bold' }}>
+                Producto: {nombreProducto(productoSeleccionado)}
+              </p>
+              <p style={{ margin: '0 0 6px 0' }}>
+                Código: {codigoProducto(productoSeleccionado)}
+              </p>
+              <p style={{ margin: 0, fontWeight: 'bold', color: estadoProducto(productoSeleccionado) === 'Correcto' ? '#155724' : '#dc3545' }}>
+                Estado: {estadoProducto(productoSeleccionado)}
+              </p>
+            </div>
+          )}
 
           <Campo label="Cantidad *">
             <input
@@ -252,17 +278,17 @@ export function CrearOrden() {
           <div style={{ display: 'flex', gap: '12px', marginTop: '28px' }}>
             <button
               type="submit"
-              disabled={enviando || !puedeCrear || cargandoProductos || productos.length === 0}
+              disabled={enviando || !puedeCrear || buscandoProducto || !productoSeleccionado}
               style={{
                 flex: 1,
                 padding: '14px',
                 fontSize: '16px',
                 fontWeight: 'bold',
-                backgroundColor: enviando || !puedeCrear ? '#6c757d' : '#28a745',
+                backgroundColor: enviando || !puedeCrear || !productoSeleccionado ? '#6c757d' : '#28a745',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
-                cursor: enviando || !puedeCrear ? 'not-allowed' : 'pointer',
+                cursor: enviando || !puedeCrear || !productoSeleccionado ? 'not-allowed' : 'pointer',
                 opacity: enviando ? 0.8 : 1,
               }}
             >
