@@ -52,6 +52,15 @@ export class ProductoService {
     }
 
     /**
+     * Obtiene un producto por su código.
+     * @param codigo Código del producto.
+     * @returns Producto encontrado o null.
+     */
+    async getByCode(codigo: string): Promise<Producto | null> {
+        return await this.productoRepository.findByCode(codigo);
+    }
+
+    /**
      * Lógica de negocio para crear un nuevo producto.
      * @param data Datos del producto.
      * @param requestingOperario Operario que realiza la acción

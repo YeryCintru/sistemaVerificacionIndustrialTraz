@@ -11,6 +11,7 @@ export class ProductoController {
         private readonly productoService: ProductoService
     ) {
         this.productoRouter.get('/', authMiddleware, this.getAll.bind(this));
+        this.productoRouter.get('/codigo/:codigo', authMiddleware, this.getByCode.bind(this));
         this.productoRouter.get('/:id', authMiddleware, this.getById.bind(this));
         this.productoRouter.post('/', authMiddleware, this.create.bind(this));
         this.productoRouter.put('/:id', authMiddleware, this.update.bind(this));
@@ -35,6 +36,26 @@ export class ProductoController {
         } catch (error) {
             console.error('Error al obtener productos:', error);
             res.status(500).json({ error: 'Error interno del servidor al listar productos' });
+        }
+    }
+
+    /**
+     * Endpoint GET /codigo/:codigo
+     * Obtiene un producto por su código.
+     */
+    async getByCode(req: Request, res: Response): Promise<void> {
+        try {
+            //Corregir posible error de tipo en req.params.codigo
+            const codigo = Array.isArray(req.params.codigo) ? req.params.codigo[0] : req.params.codigo;
+            const producto = await this.productoService.getByCode(codigo);
+            if (!producto) {
+                res.status(404).json({ error: 'Producto no encontrado' });
+            } else {
+                res.status(200).json(producto);
+            }
+        } catch (error) {
+            console.error('Error al obtener producto por código:', error);
+            res.status(500).json({ error: 'Error interno del servidor' });
         }
     }
 

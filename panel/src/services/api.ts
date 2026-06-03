@@ -258,6 +258,19 @@ export async function getProducto(id: number): Promise<Producto> {
   return response.data;
 }
 
+export async function getProductoPorCodigo(codigo: string): Promise<Producto | null> {
+  try {
+    const response = await axios.get<Producto>(`${BASE_URL}/api/productos/codigo/${encodeURIComponent(codigo)}`);
+    return response.data;
+  } catch (error: unknown) {
+    const axiosErr = error as { response?: { status?: number } };
+    if (axiosErr.response?.status === 404) {
+      return null;
+    }
+    throw error;
+  }
+}
+
 export interface CrearProductoPayload {
   nombre_producto: string;
   codigo_producto?: string;

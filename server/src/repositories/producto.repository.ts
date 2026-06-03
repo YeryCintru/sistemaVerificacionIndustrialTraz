@@ -84,6 +84,16 @@ export class ProductoRepository {
     }
 
     /**
+     * Busca un producto por su código.
+     * @param codigo Código del producto.
+     * @returns Producto o null.
+     */
+    async findByCode(codigo: string): Promise<Producto | null> {
+        const [rows] = await pool.query<RowDataPacket[]>('SELECT * FROM Producto WHERE Codigo_producto = ?', [codigo]);
+        return rows.length > 0 ? (rows[0] as Producto) : null;
+    }
+
+    /**
      * Busca un producto por su ID.
      * @param id ID del producto.
      * @returns Producto o null.
