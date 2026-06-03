@@ -30,8 +30,8 @@ export class ProductoController {
      */
     async getAll(req: Request, res: Response): Promise<void> {
         try {
-            const productos = await this.productoService.getProductos();
-            res.status(200).json(productos);
+            const result = await this.productoService.getProductosPaginated(req.query);
+            res.status(200).json(result);
         } catch (error) {
             console.error('Error al obtener productos:', error);
             res.status(500).json({ error: 'Error interno del servidor al listar productos' });
