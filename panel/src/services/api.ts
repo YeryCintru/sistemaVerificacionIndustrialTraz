@@ -208,6 +208,33 @@ export async function getProductos(): Promise<Producto[]> {
   return response.data;
 }
 
+export interface GetProductosParams {
+  page?: number;
+  limit?: number;
+  codigo_producto?: string;
+  estado_producto?: string;
+  fechaCreacion_producto?: string;
+}
+
+export async function getProductosPaginated(
+  params: GetProductosParams = {}
+): Promise<PaginatedResponse<Producto>> {
+  const searchParams = new URLSearchParams();
+  (Object.entries(params) as [keyof GetProductosParams, GetProductosParams[keyof GetProductosParams]][]).forEach(
+    ([key, value]) => {
+      if (value !== undefined && value !== null && String(value).trim() !== '') {
+        searchParams.append(key, String(value));
+      }
+    }
+  );
+  const query = searchParams.toString();
+  const url = query
+    ? `${BASE_URL}/api/productos?${query}`
+    : `${BASE_URL}/api/productos/`;
+  const response = await axios.get<PaginatedResponse<Producto>>(url);
+  return response.data;
+}
+
 export async function getOrdenPorCodigo(codigoOrden: string): Promise<OrdenProduccion> {
   const response = await axios.get<OrdenProduccion>(
     `${BASE_URL}/api/ordenesprod/codigo/${encodeURIComponent(codigoOrden)}`
