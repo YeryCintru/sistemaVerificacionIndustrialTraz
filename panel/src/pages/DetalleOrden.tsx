@@ -59,10 +59,6 @@ export function DetalleOrden({ orden, onVolver, setOrdenActual }: DetalleOrdenPr
     prevCantidadRef.current = orden.Cantidad_ordenProd;
   }, [orden.Estado_ordenProd, orden.Cantidad_ordenProd, orden.CantidadCompletada_ordenProd, navigate]);
 
-  const handleVerificarPieza = () => {
-    navigate('/verificacion');
-  };
-
   const handleVerProducto = async () => {
     try {
       const prod = await getProducto(orden.Id_producto);
@@ -259,26 +255,6 @@ export function DetalleOrden({ orden, onVolver, setOrdenActual }: DetalleOrdenPr
               {orden.Comentarios_ordenProd || 'Sin comentarios'}
             </p>
           </div>
-
-          <button
-            onClick={handleVerificarPieza}
-            style={{
-              width: '100%',
-              padding: '15px',
-              fontSize: '18px',
-              fontWeight: 'bold',
-              backgroundColor: '#28a745',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              marginTop: '30px',
-              boxShadow: '0 4px 10px rgba(40, 167, 69, 0.3)',
-              transition: 'transform 0.2s'
-            }}
-          >
-            VERIFICAR LOTE
-          </button>
         </div>
 
         {/* Columna Derecha: Información del Producto */}

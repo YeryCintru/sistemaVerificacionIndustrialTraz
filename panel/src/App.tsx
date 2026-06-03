@@ -6,7 +6,6 @@ import { BusquedaOrden } from './pages/BusquedaOrden';
 import { Ordenes } from './pages/Ordenes';
 import { CrearOrden } from './pages/CrearOrden';
 import { DetalleOrden } from './pages/DetalleOrden';
-import { Verificacion } from './pages/Verificacion';
 import { Login } from './pages/Login';
 import { Inicio } from './pages/Inicio';
 import { Productos } from './pages/Productos';
@@ -59,7 +58,6 @@ function App() {
         <Route path="/crear-orden" element={<CrearOrden />} />
         <Route path="/busqueda" element={<BusquedaOrden onBuscar={handleBuscar} />} />
         <Route path="/detalle" element={ordenActual ? <DetalleOrden orden={ordenActual} onVolver={handleVolver} setOrdenActual={setOrdenActual} /> : <Navigate to="/ordenes" />} />
-        <Route path="/verificacion" element={ordenActual ? <Verificacion orden={ordenActual} setOrdenActual={setOrdenActual} /> : <Navigate to="/ordenes" />} />
         <Route path="/productos" element={<Productos onSeleccionar={handleSeleccionarProducto} />} />
         <Route path="/crear-producto" element={<CrearProducto />} />
         <Route
