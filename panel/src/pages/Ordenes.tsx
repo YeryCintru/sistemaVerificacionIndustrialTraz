@@ -28,6 +28,7 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
 
+  const [filtroCodigoOrden, setFiltroCodigoOrden] = React.useState('');
   const [filtroLote, setFiltroLote] = React.useState('');
   const [filtroEstado, setFiltroEstado] = React.useState<EstadoFiltro>('');
   const [filtroFecha, setFiltroFecha] = React.useState('');
@@ -35,6 +36,7 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
   const [filtroProducto, setFiltroProducto] = React.useState('');
   const [paginaActual, setPaginaActual] = React.useState(1);
   const [filtrosAplicados, setFiltrosAplicados] = React.useState({
+    codigoOrden: '',
     lote: '',
     estado: '',
     fechaInicio: '',
@@ -51,6 +53,7 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
         const response = await getOrdenesPaginated({
           page: paginaActual,
           limit: PAGE_SIZE,
+          codigo_ordenProd: filtrosAplicados.codigoOrden || undefined,
           lote_ordenProd: filtrosAplicados.lote || undefined,
           estado_ordenProd: filtrosAplicados.estado || undefined,
           codigo_producto: filtrosAplicados.producto || undefined,
@@ -79,6 +82,7 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
 
   const handleBuscar = () => {
     setFiltrosAplicados({
+      codigoOrden: filtroCodigoOrden,
       lote: filtroLote,
       estado: filtroEstado,
       fechaInicio: filtroFecha,
@@ -89,12 +93,14 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
   };
 
   const handleLimpiarFiltros = () => {
+    setFiltroCodigoOrden('');
     setFiltroLote('');
     setFiltroEstado('');
     setFiltroFecha('');
     setFiltroFechaFinal('');
     setFiltroProducto('');
     setFiltrosAplicados({
+      codigoOrden: '',
       lote: '',
       estado: '',
       fechaInicio: '',
@@ -206,6 +212,19 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
           borderRadius: '8px',
           border: '1px solid #eee',
         }}>
+          <div style={{ flex: '0 1 180px' }}>
+            <label style={{ display: 'block', fontWeight: 'bold', color: '#666', fontSize: '14px', marginBottom: '6px' }}>
+              Código de orden
+            </label>
+            <input
+              type="text"
+              placeholder="Buscar por orden..."
+              value={filtroCodigoOrden}
+              onChange={(e) => setFiltroCodigoOrden(e.target.value)}
+              style={inputFiltroStyle}
+            />
+          </div>
+
           <div style={{ flex: '1 1 220px' }}>
             <label style={{ display: 'block', fontWeight: 'bold', color: '#666', fontSize: '14px', marginBottom: '6px' }}>
               Código de lote
