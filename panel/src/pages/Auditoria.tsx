@@ -50,14 +50,14 @@ export function Auditoria() {
   const [filtroOperario, setFiltroOperario] = React.useState('');
   const [filtroCodigoOrden, setFiltroCodigoOrden] = React.useState('');
   const [filtroLote, setFiltroLote] = React.useState('');
-  const [filtroProducto, setFiltroProducto] = React.useState('');
+  const [filtroCodigoProducto, setFiltroCodigoProducto] = React.useState('');
   const [paginaActual, setPaginaActual] = React.useState(1);
   const [filtrosAplicados, setFiltrosAplicados] = React.useState({
     accion: '',
     resultado: '',
     operario: '',
     lote: '',
-    producto: '',
+    codigoProducto: '',
     fecha: '',
   });
   const [detalle, setDetalle] = React.useState<RegistroAuditoria | null>(null);
@@ -75,7 +75,7 @@ export function Auditoria() {
           resultado_log: filtrosAplicados.resultado || undefined,
           nombre_operario: filtrosAplicados.operario || undefined,
           lote_ordenProd: filtrosAplicados.lote || undefined,
-          nombre_producto: filtrosAplicados.producto || undefined,
+          codigo_producto: filtrosAplicados.codigoProducto || undefined,
           momento_log: filtrosAplicados.fecha || undefined,
         });
         if (!cancelado) {
@@ -103,19 +103,9 @@ export function Auditoria() {
     return Array.from(set).sort();
   }, [registros]);
 
-  const operariosUnicos = React.useMemo(() => {
-    const set = new Set(registros.map((r) => r.Nombre_operario).filter(Boolean) as string[]);
-    return Array.from(set).sort();
-  }, [registros]);
-
-  const productosUnicos = React.useMemo(() => {
-    const set = new Set(registros.map((r) => r.Nombre_producto).filter(Boolean) as string[]);
-    return Array.from(set).sort();
-  }, [registros]);
-
   const hayFiltrosActivos =
     filtroFecha || filtroResultado || filtroAccion || filtroOperario
-    || filtroCodigoOrden || filtroLote || filtroProducto;
+    || filtroCodigoOrden || filtroLote || filtroCodigoProducto;
 
   const handleBuscar = () => {
     setFiltrosAplicados({
@@ -123,7 +113,7 @@ export function Auditoria() {
       resultado: filtroResultado,
       operario: filtroOperario,
       lote: filtroLote,
-      producto: filtroProducto,
+      codigoProducto: filtroCodigoProducto,
       fecha: filtroFecha,
     });
     setPaginaActual(1);
@@ -136,13 +126,13 @@ export function Auditoria() {
     setFiltroOperario('');
     setFiltroCodigoOrden('');
     setFiltroLote('');
-    setFiltroProducto('');
+    setFiltroCodigoProducto('');
     setFiltrosAplicados({
       accion: '',
       resultado: '',
       operario: '',
       lote: '',
-      producto: '',
+      codigoProducto: '',
       fecha: '',
     });
     setPaginaActual(1);
@@ -216,16 +206,13 @@ export function Auditoria() {
           </div>
           <div style={{ flex: '0 1 180px' }}>
             <label style={labelStyle}>Operario</label>
-            <select
+            <input
+              type="text"
+              placeholder="Nombre del operario"
               value={filtroOperario}
               onChange={(e) => setFiltroOperario(e.target.value)}
-              style={{ ...inputStyle, backgroundColor: 'white', cursor: 'pointer' }}
-            >
-              <option value="">Todos</option>
-              {operariosUnicos.map((op) => (
-                <option key={op} value={op}>{op}</option>
-              ))}
-            </select>
+              style={inputStyle}
+            />
           </div>
           <div style={{ flex: '1 1 160px' }}>
             <label style={labelStyle}>Código orden</label>
@@ -248,17 +235,14 @@ export function Auditoria() {
             />
           </div>
           <div style={{ flex: '1 1 180px' }}>
-            <label style={labelStyle}>Producto</label>
-            <select
-              value={filtroProducto}
-              onChange={(e) => setFiltroProducto(e.target.value)}
-              style={{ ...inputStyle, backgroundColor: 'white', cursor: 'pointer' }}
-            >
-              <option value="">Todos</option>
-              {productosUnicos.map((prod) => (
-                <option key={prod} value={prod}>{prod}</option>
-              ))}
-            </select>
+            <label style={labelStyle}>Código de producto</label>
+            <input
+              type="text"
+              placeholder="Ej: PROD-1"
+              value={filtroCodigoProducto}
+              onChange={(e) => setFiltroCodigoProducto(e.target.value)}
+              style={inputStyle}
+            />
           </div>
           <button type="button" onClick={handleBuscar} style={btnBuscar}>Buscar</button>
           {hayFiltrosActivos && (
