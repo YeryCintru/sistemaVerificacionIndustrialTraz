@@ -339,6 +339,7 @@ export interface GetAuditoriaParams {
   accion_log?: string;
   resultado_log?: string;
   nombre_operario?: string;
+  codigo_ordenProd?: string;
   lote_ordenProd?: string;
   codigo_producto?: string;
   momento_log?: string;
