@@ -17,7 +17,6 @@ export function CrearOrden() {
 
   const [idProducto, setIdProducto] = React.useState('');
   const [cantidad, setCantidad] = React.useState('');
-  const [codigoOrden, setCodigoOrden] = React.useState('');
   const [lote, setLote] = React.useState('');
   const [comentarios, setComentarios] = React.useState('');
 
@@ -25,26 +24,24 @@ export function CrearOrden() {
   const usuario: LoginResponse | null = usuarioRaw ? JSON.parse(usuarioRaw) : null;
   const puedeCrear = usuario && ROLES_CREAR.includes(usuario.Rol_operario);
 
-  const handleBuscarProducto = React.useCallback(async (codigo: string) => {
-    setCodigoProductoBusqueda(codigo);
-    if (!codigo.trim()) {
-      setProductoSeleccionado(null);
-      setIdProducto('');
+  const handleBuscarProducto = React.useCallback(async () => {
+    if (!codigoProductoBusqueda.trim()) {
+      setError('Ingresa un código de producto para buscar.');
       return;
     }
 
     setBuscandoProducto(true);
+    setError('');
     try {
-      const producto = await getProductoPorCodigo(codigo.trim());
+      const producto = await getProductoPorCodigo(codigoProductoBusqueda.trim());
       if (producto) {
         setProductoSeleccionado(producto);
         const id = getIdProducto(producto);
         setIdProducto(id != null ? String(id) : '');
-        setError('');
       } else {
         setProductoSeleccionado(null);
         setIdProducto('');
-        setError(`No se encontró producto con código: ${codigo}`);
+        setError(`No se encontró producto con código: ${codigoProductoBusqueda}`);
       }
     } catch {
       setProductoSeleccionado(null);
@@ -53,7 +50,7 @@ export function CrearOrden() {
     } finally {
       setBuscandoProducto(false);
     }
-  }, []);
+  }, [codigoProductoBusqueda]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,14 +80,12 @@ export function CrearOrden() {
         id_producto: Number(idProducto),
       };
 
-      if (codigoOrden.trim()) payload.codigo_ordenProd = codigoOrden.trim();
       if (lote.trim()) payload.lote_ordenProd = lote.trim();
       if (comentarios.trim()) payload.comentarios_ordenProd = comentarios.trim();
 
       const nuevaOrden = await crearOrden(payload);
       setExito(`Orden creada: ${nuevaOrden.Codigo_ordenProd} (lote ${nuevaOrden.Lote_ordenProd})`);
       setCantidad('');
-      setCodigoOrden('');
       setLote('');
       setComentarios('');
       setCodigoProductoBusqueda('');
@@ -193,18 +188,35 @@ export function CrearOrden() {
         )}
 
         <form onSubmit={handleSubmit}>
-          <Campo label="Código de producto *" hint="Escribe el código del producto para buscarlo (ej: PROD-1)">
-            <input
-              type="text"
-              placeholder="PROD-1"
-              value={codigoProductoBusqueda}
-              onChange={(e) => handleBuscarProducto(e.target.value)}
-              disabled={enviando || !puedeCrear}
-              style={inputStyle}
-            />
-            {buscandoProducto && (
-              <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#666' }}>Buscando...</p>
-            )}
+          <Campo label="Código de producto *" hint="Escribe el código del producto (ej: PROD-1)">
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+              <input
+                type="text"
+                placeholder="PROD-1"
+                value={codigoProductoBusqueda}
+                onChange={(e) => setCodigoProductoBusqueda(e.target.value)}
+                disabled={enviando || !puedeCrear || buscandoProducto}
+                style={{ ...inputStyle, flex: 1 }}
+              />
+              <button
+                type="button"
+                onClick={handleBuscarProducto}
+                disabled={enviando || !puedeCrear || buscandoProducto || !codigoProductoBusqueda.trim()}
+                style={{
+                  padding: '10px 16px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  backgroundColor: enviando || !puedeCrear || buscandoProducto ? '#6c757d' : '#007bff',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: enviando || !puedeCrear || buscandoProducto ? 'not-allowed' : 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {buscandoProducto ? 'Buscando...' : 'Buscar'}
+              </button>
+            </div>
           </Campo>
 
           {productoSeleccionado && (
@@ -238,17 +250,6 @@ export function CrearOrden() {
               placeholder="Ej: 500"
               disabled={enviando || !puedeCrear}
               required
-              style={inputStyle}
-            />
-          </Campo>
-
-          <Campo label="Código de orden" hint="Formato: ORD-2026-1. Si está vacío o no es válido, se autogenera.">
-            <input
-              type="text"
-              value={codigoOrden}
-              onChange={(e) => setCodigoOrden(e.target.value)}
-              placeholder="ORD-2026-1"
-              disabled={enviando || !puedeCrear}
               style={inputStyle}
             />
           </Campo>
