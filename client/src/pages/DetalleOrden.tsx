@@ -43,6 +43,20 @@ export function DetalleOrden({ orden, onVolver, setOrdenActual }: DetalleOrdenPr
   }, [orden.Estado_ordenProd, orden.Cantidad_ordenProd, orden.CantidadCompletada_ordenProd, navigate]);
 
   const handleVerificarPieza = () => {
+    // Usamos ?? 0 por si los valores vienen como undefined desde el servidor
+    const completada = orden.CantidadCompletada_ordenProd ?? 0;
+    const total = orden.Cantidad_ordenProd ?? 0;
+
+    if (orden.Estado_ordenProd === 'Cerrada') {
+      alert('Esta orden ya está cerrada. No se pueden verificar más piezas.');
+      return;
+    }else if (orden.Estado_ordenProd === 'Pendiente') {
+      alert('Esta orden aún no ha sido iniciada. Por favor, espere a que el supervisor la ordene antes de verificar piezas.');
+      return;
+    }else if (completada >= total) {
+      alert('¡La orden ya ha sido completada! No se pueden verificar más piezas.');
+      return;
+    }
     navigate('/verificacion');
   };
 
