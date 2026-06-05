@@ -34,8 +34,8 @@ export class OrdenController {
      */
     async getAll(req: Request, res: Response): Promise<void> {
         try {
-            const ordenes = await this.ordenService.getOrdenes();
-            res.status(200).json(ordenes);
+            const result = await this.ordenService.getOrdenesPaginated(req.query);
+            res.status(200).json(result);
         } catch (error) {
             console.error('Error al obtener órdenes:', error);
             res.status(500).json({ error: 'Error interno al listar órdenes' });

@@ -4,14 +4,14 @@ import { BotonLogout } from '../components/BotonLogout';
 import {
   accionLog,
   comentariosLog,
-  getAuditoria,
+  getAuditoriaPaginated,
   momentoLog,
   numeroLog,
   resultadoLog,
 } from '../services/api';
 import type { RegistroAuditoria } from '../services/api';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 15;
 
 function formatearFechaHora(fechaIso: string | Date | undefined): string {
   if (!fechaIso) return '-';
@@ -39,6 +39,8 @@ function colorResultado(resultado: string): string {
 export function Auditoria() {
   const navigate = useNavigate();
   const [registros, setRegistros] = React.useState<RegistroAuditoria[]>([]);
+  const [totalItems, setTotalItems] = React.useState(0);
+  const [totalPaginas, setTotalPaginas] = React.useState(1);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
 
@@ -48,8 +50,17 @@ export function Auditoria() {
   const [filtroOperario, setFiltroOperario] = React.useState('');
   const [filtroCodigoOrden, setFiltroCodigoOrden] = React.useState('');
   const [filtroLote, setFiltroLote] = React.useState('');
-  const [filtroProducto, setFiltroProducto] = React.useState('');
+  const [filtroCodigoProducto, setFiltroCodigoProducto] = React.useState('');
   const [paginaActual, setPaginaActual] = React.useState(1);
+  const [filtrosAplicados, setFiltrosAplicados] = React.useState({
+    accion: '',
+    resultado: '',
+    operario: '',
+    codigoOrden: '',
+    lote: '',
+    codigoProducto: '',
+    fecha: '',
+  });
   const [detalle, setDetalle] = React.useState<RegistroAuditoria | null>(null);
 
   React.useEffect(() => {
@@ -58,8 +69,22 @@ export function Auditoria() {
       setLoading(true);
       setError('');
       try {
-        const data = await getAuditoria();
-        if (!cancelado) setRegistros(data);
+        const response = await getAuditoriaPaginated({
+          page: paginaActual,
+          limit: PAGE_SIZE,
+          accion_log: filtrosAplicados.accion || undefined,
+          resultado_log: filtrosAplicados.resultado || undefined,
+          nombre_operario: filtrosAplicados.operario || undefined,
+          codigo_ordenProd: filtrosAplicados.codigoOrden || undefined,
+          lote_ordenProd: filtrosAplicados.lote || undefined,
+          codigo_producto: filtrosAplicados.codigoProducto || undefined,
+          momento_log: filtrosAplicados.fecha || undefined,
+        });
+        if (!cancelado) {
+          setRegistros(response.data);
+          setTotalItems(response.totalItems);
+          setTotalPaginas(Math.max(1, response.totalPages));
+        }
       } catch {
         if (!cancelado) setError('No se pudieron cargar los registros de auditoría.');
       } finally {
@@ -68,7 +93,7 @@ export function Auditoria() {
     };
     cargar();
     return () => { cancelado = true; };
-  }, []);
+  }, [paginaActual, filtrosAplicados]);
 
   const resultadosUnicos = React.useMemo(() => {
     const set = new Set(registros.map((r) => resultadoLog(r)).filter(Boolean));
@@ -80,33 +105,50 @@ export function Auditoria() {
     return Array.from(set).sort();
   }, [registros]);
 
-  const operariosUnicos = React.useMemo(() => {
-    const set = new Set(registros.map((r) => r.Nombre_operario).filter(Boolean) as string[]);
-    return Array.from(set).sort();
-  }, [registros]);
-
-  const productosUnicos = React.useMemo(() => {
-    const set = new Set(registros.map((r) => r.Nombre_producto).filter(Boolean) as string[]);
-    return Array.from(set).sort();
-  }, [registros]);
-
   const hayFiltrosActivos =
     filtroFecha || filtroResultado || filtroAccion || filtroOperario
-    || filtroCodigoOrden || filtroLote || filtroProducto;
+    || filtroCodigoOrden || filtroLote || filtroCodigoProducto;
 
-  const totalPaginas = Math.max(1, Math.ceil(registros.length / PAGE_SIZE));
+  const handleBuscar = () => {
+    setFiltrosAplicados({
+      accion: filtroAccion,
+      resultado: filtroResultado,
+      operario: filtroOperario,
+      codigoOrden: filtroCodigoOrden,
+      lote: filtroLote,
+      codigoProducto: filtroCodigoProducto,
+      fecha: filtroFecha,
+    });
+    setPaginaActual(1);
+  };
 
-  React.useEffect(() => {
-    if (paginaActual > totalPaginas) setPaginaActual(totalPaginas);
-  }, [paginaActual, totalPaginas]);
-
-  const indiceInicio = (paginaActual - 1) * PAGE_SIZE;
-  const indiceFin = Math.min(indiceInicio + PAGE_SIZE, registros.length);
-  const registrosPagina = registros.slice(indiceInicio, indiceFin);
+  const handleLimpiarFiltros = () => {
+    setFiltroFecha('');
+    setFiltroResultado('');
+    setFiltroAccion('');
+    setFiltroOperario('');
+    setFiltroCodigoOrden('');
+    setFiltroLote('');
+    setFiltroCodigoProducto('');
+    setFiltrosAplicados({
+      accion: '',
+      resultado: '',
+      operario: '',
+      codigoOrden: '',
+      lote: '',
+      codigoProducto: '',
+      fecha: '',
+    });
+    setPaginaActual(1);
+  };
 
   const irAPagina = (pagina: number) => {
     if (pagina >= 1 && pagina <= totalPaginas) setPaginaActual(pagina);
   };
+
+  const totalFormateado = totalItems.toLocaleString('es-ES');
+  const rangoInicio = totalItems === 0 ? 0 : (paginaActual - 1) * PAGE_SIZE + 1;
+  const rangoFin = totalItems === 0 ? 0 : Math.min((paginaActual - 1) * PAGE_SIZE + registros.length, totalItems);
 
   const paginasVisibles = React.useMemo(() => {
     const maxVisibles = 5;
@@ -117,10 +159,6 @@ export function Auditoria() {
     for (let i = inicio; i <= fin; i++) paginas.push(i);
     return paginas;
   }, [paginaActual, totalPaginas]);
-
-  const totalFormateado = registros.length.toLocaleString('es-ES');
-  const rangoInicio = registros.length === 0 ? 0 : indiceInicio + 1;
-  const rangoFin = indiceFin;
 
   return (
     <div style={pageWrap}>
@@ -172,16 +210,13 @@ export function Auditoria() {
           </div>
           <div style={{ flex: '0 1 180px' }}>
             <label style={labelStyle}>Operario</label>
-            <select
+            <input
+              type="text"
+              placeholder="Nombre del operario"
               value={filtroOperario}
               onChange={(e) => setFiltroOperario(e.target.value)}
-              style={{ ...inputStyle, backgroundColor: 'white', cursor: 'pointer' }}
-            >
-              <option value="">Todos</option>
-              {operariosUnicos.map((op) => (
-                <option key={op} value={op}>{op}</option>
-              ))}
-            </select>
+              style={inputStyle}
+            />
           </div>
           <div style={{ flex: '1 1 160px' }}>
             <label style={labelStyle}>Código orden</label>
@@ -204,31 +239,20 @@ export function Auditoria() {
             />
           </div>
           <div style={{ flex: '1 1 180px' }}>
-            <label style={labelStyle}>Producto</label>
-            <select
-              value={filtroProducto}
-              onChange={(e) => setFiltroProducto(e.target.value)}
-              style={{ ...inputStyle, backgroundColor: 'white', cursor: 'pointer' }}
-            >
-              <option value="">Todos</option>
-              {productosUnicos.map((prod) => (
-                <option key={prod} value={prod}>{prod}</option>
-              ))}
-            </select>
+            <label style={labelStyle}>Código de producto</label>
+            <input
+              type="text"
+              placeholder="Ej: PROD-1"
+              value={filtroCodigoProducto}
+              onChange={(e) => setFiltroCodigoProducto(e.target.value)}
+              style={inputStyle}
+            />
           </div>
-          <button type="button" style={btnBuscar}>Buscar</button>
+          <button type="button" onClick={handleBuscar} style={btnBuscar}>Buscar</button>
           {hayFiltrosActivos && (
             <button
               type="button"
-              onClick={() => {
-                setFiltroFecha('');
-                setFiltroResultado('');
-                setFiltroAccion('');
-                setFiltroOperario('');
-                setFiltroCodigoOrden('');
-                setFiltroLote('');
-                setFiltroProducto('');
-              }}
+              onClick={handleLimpiarFiltros}
               style={{ ...btnLimpiar, alignSelf: 'flex-end' }}
             >
               Limpiar filtros
@@ -255,14 +279,14 @@ export function Auditoria() {
                 </tr>
               </thead>
               <tbody>
-                {registrosPagina.length === 0 ? (
+                {registros.length === 0 ? (
                   <tr>
                     <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: '#666' }}>
                       No hay registros de auditoría.
                     </td>
                   </tr>
                 ) : (
-                  registrosPagina.map((r) => {
+                  registros.map((r) => {
                     const resultado = resultadoLog(r);
                     const refOrden = r.Lote_ordenProd ? `Lote: ${r.Lote_ordenProd}` : '';
                     const refProducto = r.Nombre_producto ? r.Nombre_producto : '';

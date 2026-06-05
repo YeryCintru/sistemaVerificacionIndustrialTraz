@@ -14,7 +14,6 @@ export function CrearProducto() {
   const [exito, setExito] = React.useState('');
 
   const [nombre, setNombre] = React.useState('');
-  const [codigo, setCodigo] = React.useState('');
   const [estado, setEstado] = React.useState<string>('Correcto');
   const [verificador, setVerificador] = React.useState('');
   const [documentacion, setDocumentacion] = React.useState('');
@@ -44,14 +43,12 @@ export function CrearProducto() {
         nombre_producto: nombre.trim(),
         estado_producto: estado,
       };
-      if (codigo.trim()) payload.codigo_producto = codigo.trim();
       if (verificador.trim()) payload.verificador_producto = verificador.trim();
       if (documentacion.trim()) payload.documentacion_producto = documentacion.trim();
 
       const nuevo = await crearProducto(payload);
       setExito(`Producto creado: ${codigoProducto(nuevo)} — ${nombre.trim()}`);
       setNombre('');
-      setCodigo('');
       setEstado('Correcto');
       setVerificador('');
       setDocumentacion('');
@@ -72,7 +69,7 @@ export function CrearProducto() {
       <div style={card}>
         <h2 style={titulo}>Crear producto</h2>
         <p style={subtitulo}>
-          El código es opcional (formato PROD-N). Si no lo indicas, se genera automáticamente.
+          El código se genera automáticamente (formato PROD-N).
         </p>
 
         {!puedeCrear && (
@@ -90,17 +87,6 @@ export function CrearProducto() {
               placeholder="Ej: Válvula de presión V1"
               disabled={enviando || !puedeCrear}
               required
-              style={inputStyle}
-            />
-          </Campo>
-
-          <Campo label="Código" hint="Ej: PROD-1">
-            <input
-              type="text"
-              value={codigo}
-              onChange={(e) => setCodigo(e.target.value)}
-              placeholder="PROD-1"
-              disabled={enviando || !puedeCrear}
               style={inputStyle}
             />
           </Campo>

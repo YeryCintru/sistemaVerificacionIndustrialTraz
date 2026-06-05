@@ -1,7 +1,8 @@
 import { Service } from 'typedi';
-import { ProductoRepository } from '../repositories/producto.repository';
+import { ProductoRepository, ProductoFilters } from '../repositories/producto.repository';
 import { AuditService } from './audit.service';
 import { Producto, ProductoCreation } from '../models/productos.model';
+import { PaginationResult, getQueryString, parsePageLimit } from '../utils/pagination';
 
 @Service()
 export class ProductoService {
@@ -19,6 +20,24 @@ export class ProductoService {
         return await this.productoRepository.findAll();
     }
 
+    async getProductosPaginated(query: any): Promise<PaginationResult<Producto>> {
+        const { page, limit } = parsePageLimit(query);
+
+        const filters: ProductoFilters = {
+            filtro: getQueryString(query, 'filtro'),
+            codigo_producto: getQueryString(query, 'codigo_producto'),
+            nombre_producto: getQueryString(query, 'nombre_producto'),
+            estado_producto: getQueryString(query, 'estado_producto'),
+            verificador_producto: getQueryString(query, 'verificador_producto'),
+            fechaCreacion_producto: getQueryString(query, 'fechaCreacion_producto')
+        };
+
+        const { data, totalItems } = await this.productoRepository.findPaginated(filters, page, limit);
+        const totalPages = limit > 0 ? Math.ceil(totalItems / limit) : 0;
+
+        return { data, totalItems, totalPages, currentPage: page };
+    }
+
     /**
      * Obtiene un producto por su ID.
      * @param id ID del producto.
@@ -30,6 +49,15 @@ export class ProductoService {
             throw new Error('ProductoNotFound');
         }
         return producto;
+    }
+
+    /**
+     * Obtiene un producto por su código.
+     * @param codigo Código del producto.
+     * @returns Producto encontrado o null.
+     */
+    async getByCode(codigo: string): Promise<Producto | null> {
+        return await this.productoRepository.findByCode(codigo);
     }
 
     /**

@@ -134,8 +134,51 @@ export interface CrearOrdenPayload {
   comentarios_ordenProd?: string;
 }
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  totalItems: number;
+  totalPages: number;
+  currentPage: number;
+}
+
+/** Parámetros de query para GET /api/ordenesprod (paginación y filtros en servidor) */
+export interface GetOrdenesParams {
+  page?: number;
+  limit?: number;
+  filtro?: string;
+  codigo_ordenProd?: string;
+  lote_ordenProd?: string;
+  estado_ordenProd?: string;
+  codigo_producto?: string;
+  fechaInicio_ordenProd?: string;
+  fechaCierre_ordenProd?: string;
+}
+
 export async function getOrdenes(): Promise<OrdenProduccion[]> {
   const response = await axios.get<OrdenProduccion[]>(`${BASE_URL}/api/ordenesprod/`);
+  return response.data;
+}
+
+/**
+ * Listado paginado de órdenes (GET /api/ordenesprod).
+ * Misma ruta que getOrdenes; el backend devuelve { data, totalItems, totalPages, currentPage }.
+ */
+export async function getOrdenesPaginated(
+  params: GetOrdenesParams = {}
+): Promise<PaginatedResponse<OrdenProduccion>> {
+  const searchParams = new URLSearchParams();
+  (Object.entries(params) as [keyof GetOrdenesParams, GetOrdenesParams[keyof GetOrdenesParams]][]).forEach(
+    ([key, value]) => {
+      if (value !== undefined && value !== null && String(value).trim() !== '') {
+        searchParams.append(key, String(value));
+      }
+    }
+  );
+  const query = searchParams.toString();
+  const url = query
+    ? `${BASE_URL}/api/ordenesprod?${query}`
+    : `${BASE_URL}/api/ordenesprod/`;
+  const response = await axios.get<PaginatedResponse<OrdenProduccion>>(url);
   return response.data;
 }
 
@@ -165,6 +208,33 @@ export async function getProductos(): Promise<Producto[]> {
   return response.data;
 }
 
+export interface GetProductosParams {
+  page?: number;
+  limit?: number;
+  codigo_producto?: string;
+  estado_producto?: string;
+  fechaCreacion_producto?: string;
+}
+
+export async function getProductosPaginated(
+  params: GetProductosParams = {}
+): Promise<PaginatedResponse<Producto>> {
+  const searchParams = new URLSearchParams();
+  (Object.entries(params) as [keyof GetProductosParams, GetProductosParams[keyof GetProductosParams]][]).forEach(
+    ([key, value]) => {
+      if (value !== undefined && value !== null && String(value).trim() !== '') {
+        searchParams.append(key, String(value));
+      }
+    }
+  );
+  const query = searchParams.toString();
+  const url = query
+    ? `${BASE_URL}/api/productos?${query}`
+    : `${BASE_URL}/api/productos/`;
+  const response = await axios.get<PaginatedResponse<Producto>>(url);
+  return response.data;
+}
+
 export async function getOrdenPorCodigo(codigoOrden: string): Promise<OrdenProduccion> {
   const response = await axios.get<OrdenProduccion>(
     `${BASE_URL}/api/ordenesprod/codigo/${encodeURIComponent(codigoOrden)}`
@@ -186,6 +256,19 @@ export async function verificarOrden(id: number, resultado: string, idOperario: 
 export async function getProducto(id: number): Promise<Producto> {
   const response = await axios.get<Producto>(`${BASE_URL}/api/productos/${id}`);
   return response.data;
+}
+
+export async function getProductoPorCodigo(codigo: string): Promise<Producto | null> {
+  try {
+    const response = await axios.get<Producto>(`${BASE_URL}/api/productos/codigo/${encodeURIComponent(codigo)}`);
+    return response.data;
+  } catch (error: unknown) {
+    const axiosErr = error as { response?: { status?: number } };
+    if (axiosErr.response?.status === 404) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 export interface CrearProductoPayload {
@@ -247,6 +330,37 @@ export interface RegistroAuditoria {
 
 export async function getAuditoria(): Promise<RegistroAuditoria[]> {
   const response = await axios.get<RegistroAuditoria[]>(`${BASE_URL}/api/audit/`);
+  return response.data;
+}
+
+export interface GetAuditoriaParams {
+  page?: number;
+  limit?: number;
+  accion_log?: string;
+  resultado_log?: string;
+  nombre_operario?: string;
+  codigo_ordenProd?: string;
+  lote_ordenProd?: string;
+  codigo_producto?: string;
+  momento_log?: string;
+}
+
+export async function getAuditoriaPaginated(
+  params: GetAuditoriaParams = {}
+): Promise<PaginatedResponse<RegistroAuditoria>> {
+  const searchParams = new URLSearchParams();
+  (Object.entries(params) as [keyof GetAuditoriaParams, GetAuditoriaParams[keyof GetAuditoriaParams]][]).forEach(
+    ([key, value]) => {
+      if (value !== undefined && value !== null && String(value).trim() !== '') {
+        searchParams.append(key, String(value));
+      }
+    }
+  );
+  const query = searchParams.toString();
+  const url = query
+    ? `${BASE_URL}/api/audit?${query}`
+    : `${BASE_URL}/api/audit/`;
+  const response = await axios.get<PaginatedResponse<RegistroAuditoria>>(url);
   return response.data;
 }
 

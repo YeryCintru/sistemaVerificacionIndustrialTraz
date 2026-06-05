@@ -5,6 +5,34 @@ import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 @Service()
 export class ProductoRepository {
+
+    async findPaginated(
+        filters: ProductoFilters,
+        page: number,
+        limit: number
+    ): Promise<{ data: Producto[]; totalItems: number }> {
+        const offset = (page - 1) * limit;
+        const { whereSql, params } = buildProductoWhere(filters);
+
+        const countQuery = `
+            SELECT COUNT(*) AS totalItems
+            FROM Producto
+            ${whereSql}
+        `;
+        const [countRows] = await pool.query<RowDataPacket[]>(countQuery, params);
+        const totalItems = Number((countRows[0] as any)?.totalItems ?? 0);
+
+        const selectQuery = `
+            SELECT *
+            FROM Producto
+            ${whereSql}
+            ORDER BY FechaCreacion_producto DESC
+            LIMIT ? OFFSET ?
+        `;
+        const [rows] = await pool.query<RowDataPacket[]>(selectQuery, [...params, limit, offset]);
+
+        return { data: rows as Producto[], totalItems };
+    }
     
     /**
      * Obtiene todos los productos de la base de datos.
@@ -56,6 +84,16 @@ export class ProductoRepository {
     }
 
     /**
+     * Busca un producto por su código.
+     * @param codigo Código del producto.
+     * @returns Producto o null.
+     */
+    async findByCode(codigo: string): Promise<Producto | null> {
+        const [rows] = await pool.query<RowDataPacket[]>('SELECT * FROM Producto WHERE Codigo_producto = ?', [codigo]);
+        return rows.length > 0 ? (rows[0] as Producto) : null;
+    }
+
+    /**
      * Busca un producto por su ID.
      * @param id ID del producto.
      * @returns Producto o null.
@@ -94,4 +132,57 @@ export class ProductoRepository {
         const [result] = await pool.query<ResultSetHeader>('DELETE FROM Producto WHERE Id_producto = ?', [id]);
         return result.affectedRows > 0;
     }
+}
+
+export type ProductoFilters = {
+    filtro?: string;
+    codigo_producto?: string;
+    nombre_producto?: string;
+    estado_producto?: string;
+    verificador_producto?: string;
+    fechaCreacion_producto?: string;
+};
+
+function buildProductoWhere(filters: ProductoFilters): { whereSql: string; params: any[] } {
+    const whereParts: string[] = [];
+    const params: any[] = [];
+
+    if (filters.filtro) {
+        const like = `%${filters.filtro}%`;
+        whereParts.push(`
+            (Codigo_producto LIKE ?
+            OR Nombre_producto LIKE ?
+            OR Estado_producto LIKE ?
+            OR Verificador_producto LIKE ?)
+        `);
+        params.push(like, like, like, like);
+    }
+
+    if (filters.codigo_producto) {
+        whereParts.push('Codigo_producto LIKE ?');
+        params.push(`%${filters.codigo_producto}%`);
+    }
+
+    if (filters.nombre_producto) {
+        whereParts.push('Nombre_producto LIKE ?');
+        params.push(`%${filters.nombre_producto}%`);
+    }
+
+    if (filters.estado_producto) {
+        whereParts.push('Estado_producto = ?');
+        params.push(filters.estado_producto);
+    }
+
+    if (filters.verificador_producto) {
+        whereParts.push('Verificador_producto LIKE ?');
+        params.push(`%${filters.verificador_producto}%`);
+    }
+
+    if (filters.fechaCreacion_producto) {
+        whereParts.push('FechaCreacion_producto LIKE ?');
+        params.push(`${filters.fechaCreacion_producto}%`);
+    }
+
+    const whereSql = whereParts.length > 0 ? `WHERE ${whereParts.join(' AND ')}` : '';
+    return { whereSql, params };
 }

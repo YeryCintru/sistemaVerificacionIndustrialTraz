@@ -1,22 +1,22 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BotonLogout } from '../components/BotonLogout';
-import { crearOrden, getProductos } from '../services/api';
+import { crearOrden, getProductoPorCodigo, codigoProducto, estadoProducto, idProducto as getIdProducto, nombreProducto } from '../services/api';
 import type { CrearOrdenPayload, LoginResponse, Producto } from '../services/api';
 
 const ROLES_CREAR = ['Admin', 'Supervisor'];
 
 export function CrearOrden() {
   const navigate = useNavigate();
-  const [productos, setProductos] = React.useState<Producto[]>([]);
-  const [cargandoProductos, setCargandoProductos] = React.useState(true);
+  const [codigoProductoBusqueda, setCodigoProductoBusqueda] = React.useState('');
+  const [productoSeleccionado, setProductoSeleccionado] = React.useState<Producto | null>(null);
+  const [buscandoProducto, setBuscandoProducto] = React.useState(false);
   const [enviando, setEnviando] = React.useState(false);
   const [error, setError] = React.useState('');
   const [exito, setExito] = React.useState('');
 
   const [idProducto, setIdProducto] = React.useState('');
   const [cantidad, setCantidad] = React.useState('');
-  const [codigoOrden, setCodigoOrden] = React.useState('');
   const [lote, setLote] = React.useState('');
   const [comentarios, setComentarios] = React.useState('');
 
@@ -24,27 +24,33 @@ export function CrearOrden() {
   const usuario: LoginResponse | null = usuarioRaw ? JSON.parse(usuarioRaw) : null;
   const puedeCrear = usuario && ROLES_CREAR.includes(usuario.Rol_operario);
 
-  React.useEffect(() => {
-    let cancelado = false;
-    const cargar = async () => {
-      setCargandoProductos(true);
-      try {
-        const data = await getProductos();
-        if (!cancelado) {
-          setProductos(data);
-          if (data.length > 0 && data[0].Id_producto != null) {
-            setIdProducto(String(data[0].Id_producto));
-          }
-        }
-      } catch {
-        if (!cancelado) setError('No se pudieron cargar los productos.');
-      } finally {
-        if (!cancelado) setCargandoProductos(false);
+  const handleBuscarProducto = React.useCallback(async () => {
+    if (!codigoProductoBusqueda.trim()) {
+      setError('Ingresa un código de producto para buscar.');
+      return;
+    }
+
+    setBuscandoProducto(true);
+    setError('');
+    try {
+      const producto = await getProductoPorCodigo(codigoProductoBusqueda.trim());
+      if (producto) {
+        setProductoSeleccionado(producto);
+        const id = getIdProducto(producto);
+        setIdProducto(id != null ? String(id) : '');
+      } else {
+        setProductoSeleccionado(null);
+        setIdProducto('');
+        setError(`No se encontró producto con código: ${codigoProductoBusqueda}`);
       }
-    };
-    cargar();
-    return () => { cancelado = true; };
-  }, []);
+    } catch {
+      setProductoSeleccionado(null);
+      setIdProducto('');
+      setError('Error al buscar el producto.');
+    } finally {
+      setBuscandoProducto(false);
+    }
+  }, [codigoProductoBusqueda]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,9 +62,14 @@ export function CrearOrden() {
       return;
     }
 
+    if (!productoSeleccionado || !idProducto) {
+      setError('Debes buscar y seleccionar un producto válido.');
+      return;
+    }
+
     const cantidadNum = Number(cantidad);
-    if (!idProducto || !cantidad || cantidadNum < 1) {
-      setError('Selecciona un producto e indica una cantidad válida (mínimo 1).');
+    if (!cantidad || cantidadNum < 1) {
+      setError('Indica una cantidad válida (mínimo 1).');
       return;
     }
 
@@ -69,16 +80,17 @@ export function CrearOrden() {
         id_producto: Number(idProducto),
       };
 
-      if (codigoOrden.trim()) payload.codigo_ordenProd = codigoOrden.trim();
       if (lote.trim()) payload.lote_ordenProd = lote.trim();
       if (comentarios.trim()) payload.comentarios_ordenProd = comentarios.trim();
 
       const nuevaOrden = await crearOrden(payload);
       setExito(`Orden creada: ${nuevaOrden.Codigo_ordenProd} (lote ${nuevaOrden.Lote_ordenProd})`);
       setCantidad('');
-      setCodigoOrden('');
       setLote('');
       setComentarios('');
+      setCodigoProductoBusqueda('');
+      setProductoSeleccionado(null);
+      setIdProducto('');
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { error?: string } } };
       setError(axiosErr.response?.data?.error || 'Error al crear la orden. Intenta de nuevo.');
@@ -176,32 +188,58 @@ export function CrearOrden() {
         )}
 
         <form onSubmit={handleSubmit}>
-          <Campo label="Producto *">
-            <select
-              value={idProducto}
-              onChange={(e) => setIdProducto(e.target.value)}
-              disabled={cargandoProductos || enviando || !puedeCrear}
-              required
-              style={inputStyle}
-            >
-              {cargandoProductos ? (
-                <option value="">Cargando productos...</option>
-              ) : productos.length === 0 ? (
-                <option value="">No hay productos disponibles</option>
-              ) : (
-                productos.map((p) => (
-                  <option
-                    key={p.Id_producto}
-                    value={p.Id_producto}
-                    disabled={p.Estado_producto !== 'Correcto'}
-                  >
-                    {p.Codigo_producto} — {p.Nombre_producto}
-                    {p.Estado_producto !== 'Correcto' ? ` (${p.Estado_producto})` : ''}
-                  </option>
-                ))
-              )}
-            </select>
+          <Campo label="Código de producto *" hint="Escribe el código del producto (ej: PROD-1)">
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+              <input
+                type="text"
+                placeholder="PROD-1"
+                value={codigoProductoBusqueda}
+                onChange={(e) => setCodigoProductoBusqueda(e.target.value)}
+                disabled={enviando || !puedeCrear || buscandoProducto}
+                style={{ ...inputStyle, flex: 1 }}
+              />
+              <button
+                type="button"
+                onClick={handleBuscarProducto}
+                disabled={enviando || !puedeCrear || buscandoProducto || !codigoProductoBusqueda.trim()}
+                style={{
+                  padding: '10px 16px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  backgroundColor: enviando || !puedeCrear || buscandoProducto ? '#6c757d' : '#007bff',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: enviando || !puedeCrear || buscandoProducto ? 'not-allowed' : 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {buscandoProducto ? 'Buscando...' : 'Buscar'}
+              </button>
+            </div>
           </Campo>
+
+          {productoSeleccionado && (
+            <div style={{
+              backgroundColor: '#e7f3ff',
+              border: '1px solid #b3d9ff',
+              color: '#004085',
+              padding: '12px',
+              borderRadius: '4px',
+              marginBottom: '20px',
+              fontSize: '14px',
+            }}>
+              <p style={{ margin: '0 0 6px 0', fontWeight: 'bold' }}>
+                Producto: {nombreProducto(productoSeleccionado)}
+              </p>
+              <p style={{ margin: '0 0 6px 0' }}>
+                Código: {codigoProducto(productoSeleccionado)}
+              </p>
+              <p style={{ margin: 0, fontWeight: 'bold', color: estadoProducto(productoSeleccionado) === 'Correcto' ? '#155724' : '#dc3545' }}>
+                Estado: {estadoProducto(productoSeleccionado)}
+              </p>
+            </div>
+          )}
 
           <Campo label="Cantidad *">
             <input
@@ -212,17 +250,6 @@ export function CrearOrden() {
               placeholder="Ej: 500"
               disabled={enviando || !puedeCrear}
               required
-              style={inputStyle}
-            />
-          </Campo>
-
-          <Campo label="Código de orden" hint="Formato: ORD-2026-1. Si está vacío o no es válido, se autogenera.">
-            <input
-              type="text"
-              value={codigoOrden}
-              onChange={(e) => setCodigoOrden(e.target.value)}
-              placeholder="ORD-2026-1"
-              disabled={enviando || !puedeCrear}
               style={inputStyle}
             />
           </Campo>
@@ -252,17 +279,17 @@ export function CrearOrden() {
           <div style={{ display: 'flex', gap: '12px', marginTop: '28px' }}>
             <button
               type="submit"
-              disabled={enviando || !puedeCrear || cargandoProductos || productos.length === 0}
+              disabled={enviando || !puedeCrear || buscandoProducto || !productoSeleccionado}
               style={{
                 flex: 1,
                 padding: '14px',
                 fontSize: '16px',
                 fontWeight: 'bold',
-                backgroundColor: enviando || !puedeCrear ? '#6c757d' : '#28a745',
+                backgroundColor: enviando || !puedeCrear || !productoSeleccionado ? '#6c757d' : '#28a745',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
-                cursor: enviando || !puedeCrear ? 'not-allowed' : 'pointer',
+                cursor: enviando || !puedeCrear || !productoSeleccionado ? 'not-allowed' : 'pointer',
                 opacity: enviando ? 0.8 : 1,
               }}
             >

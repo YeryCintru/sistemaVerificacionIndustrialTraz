@@ -4,6 +4,8 @@ import { ProductoRepository } from '../repositories/producto.repository';
 import { AuditService } from './audit.service';
 import { SocketService } from './socket.service';
 import { OrdenProduccion, OrdenCreation } from '../models/ordenes.model';
+import { PaginationResult, getQueryNumber, getQueryString, parsePageLimit } from '../utils/pagination';
+import { OrdenFilters } from '../repositories/orden.repository';
 
 @Service()
 export class OrdenService {
@@ -20,6 +22,31 @@ export class OrdenService {
      */
     async getOrdenes(): Promise<any[]> {
         return await this.ordenRepository.findAll();
+    }
+
+    async getOrdenesPaginated(query: any): Promise<PaginationResult<any>> {
+        const { page, limit } = parsePageLimit(query);
+
+        // Construimos una estructura de filtros “limpia” desde query params
+        const filters: OrdenFilters = {
+            filtro: getQueryString(query, 'filtro'),
+            codigo_ordenProd: getQueryString(query, 'codigo_ordenProd'),
+            lote_ordenProd: getQueryString(query, 'lote_ordenProd'),
+            estado_ordenProd: getQueryString(query, 'estado_ordenProd'),
+            codigo_producto: getQueryString(query, 'codigo_producto'),
+            fechaInicio_ordenProd: getQueryString(query, 'fechaInicio_ordenProd'),
+            fechaCierre_ordenProd: getQueryString(query, 'fechaCierre_ordenProd')
+        };
+
+        const { data, totalItems } = await this.ordenRepository.findPaginated(filters, page, limit);
+        const totalPages = limit > 0 ? Math.ceil(totalItems / limit) : 0;
+
+        return {
+            data,
+            totalItems,
+            totalPages,
+            currentPage: page
+        };
     }
 
     /**

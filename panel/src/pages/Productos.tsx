@@ -4,7 +4,7 @@ import { BotonLogout } from '../components/BotonLogout';
 import {
   codigoProducto,
   estadoProducto,
-  getProductos,
+  getProductosPaginated,
   idProducto,
   nombreProducto,
 } from '../services/api';
@@ -12,6 +12,7 @@ import type { Producto } from '../services/api';
 
 const PAGE_SIZE = 20;
 const ESTADOS_PRODUCTO = ['Correcto', 'Bloqueado', 'Baja'] as const;
+type EstadoFiltro = '' | (typeof ESTADOS_PRODUCTO)[number];
 
 function formatearFecha(fechaIso: string | Date | undefined): string {
   if (!fechaIso) return '-';
@@ -32,13 +33,20 @@ interface ProductosProps {
 export function Productos({ onSeleccionar }: ProductosProps) {
   const navigate = useNavigate();
   const [productos, setProductos] = React.useState<Producto[]>([]);
+  const [totalItems, setTotalItems] = React.useState(0);
+  const [totalPaginas, setTotalPaginas] = React.useState(1);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
 
   const [filtroCodigo, setFiltroCodigo] = React.useState('');
-  const [filtroEstado, setFiltroEstado] = React.useState('');
+  const [filtroEstado, setFiltroEstado] = React.useState<EstadoFiltro>('');
   const [filtroFechaCreacion, setFiltroFechaCreacion] = React.useState('');
   const [paginaActual, setPaginaActual] = React.useState(1);
+  const [filtrosAplicados, setFiltrosAplicados] = React.useState({
+    codigo: '',
+    estado: '',
+    fecha: '',
+  });
 
   React.useEffect(() => {
     let cancelado = false;
@@ -46,8 +54,18 @@ export function Productos({ onSeleccionar }: ProductosProps) {
       setLoading(true);
       setError('');
       try {
-        const data = await getProductos();
-        if (!cancelado) setProductos(data);
+        const response = await getProductosPaginated({
+          page: paginaActual,
+          limit: PAGE_SIZE,
+          codigo_producto: filtrosAplicados.codigo || undefined,
+          estado_producto: filtrosAplicados.estado || undefined,
+          fechaCreacion_producto: filtrosAplicados.fecha || undefined,
+        });
+        if (!cancelado) {
+          setProductos(response.data);
+          setTotalItems(response.totalItems);
+          setTotalPaginas(Math.max(1, response.totalPages));
+        }
       } catch {
         if (!cancelado) setError('No se pudieron cargar los productos.');
       } finally {
@@ -56,17 +74,28 @@ export function Productos({ onSeleccionar }: ProductosProps) {
     };
     cargar();
     return () => { cancelado = true; };
-  }, []);
+  }, [paginaActual, filtrosAplicados]);
 
-  const totalPaginas = Math.max(1, Math.ceil(productos.length / PAGE_SIZE));
+  const handleBuscar = () => {
+    setFiltrosAplicados({
+      codigo: filtroCodigo,
+      estado: filtroEstado,
+      fecha: filtroFechaCreacion,
+    });
+    setPaginaActual(1);
+  };
 
-  React.useEffect(() => {
-    if (paginaActual > totalPaginas) setPaginaActual(totalPaginas);
-  }, [paginaActual, totalPaginas]);
-
-  const indiceInicio = (paginaActual - 1) * PAGE_SIZE;
-  const indiceFin = Math.min(indiceInicio + PAGE_SIZE, productos.length);
-  const productosPagina = productos.slice(indiceInicio, indiceFin);
+  const handleLimpiarFiltros = () => {
+    setFiltroCodigo('');
+    setFiltroEstado('');
+    setFiltroFechaCreacion('');
+    setFiltrosAplicados({
+      codigo: '',
+      estado: '',
+      fecha: '',
+    });
+    setPaginaActual(1);
+  };
 
   const handleVer = (producto: Producto) => {
     onSeleccionar(producto);
@@ -87,9 +116,10 @@ export function Productos({ onSeleccionar }: ProductosProps) {
     return paginas;
   }, [paginaActual, totalPaginas]);
 
-  const totalFormateado = productos.length.toLocaleString('es-ES');
-  const rangoInicio = productos.length === 0 ? 0 : indiceInicio + 1;
-  const rangoFin = indiceFin;
+  const hayFiltrosActivos = filtroCodigo || filtroEstado || filtroFechaCreacion;
+  const totalFormateado = totalItems.toLocaleString('es-ES');
+  const rangoInicio = totalItems === 0 ? 0 : (paginaActual - 1) * PAGE_SIZE + 1;
+  const rangoFin = totalItems === 0 ? 0 : Math.min((paginaActual - 1) * PAGE_SIZE + productos.length, totalItems);
 
   return (
     <div style={pageWrap}>
@@ -120,7 +150,7 @@ export function Productos({ onSeleccionar }: ProductosProps) {
             <label style={labelStyle}>Estado</label>
             <select
               value={filtroEstado}
-              onChange={(e) => setFiltroEstado(e.target.value)}
+              onChange={(e) => setFiltroEstado(e.target.value as EstadoFiltro)}
               style={{ ...inputStyle, backgroundColor: 'white', cursor: 'pointer' }}
             >
               <option value="">Todos</option>
@@ -138,15 +168,11 @@ export function Productos({ onSeleccionar }: ProductosProps) {
               style={inputStyle}
             />
           </div>
-          <button type="button" style={btnBuscar}>Buscar</button>
-          {(filtroCodigo || filtroEstado || filtroFechaCreacion) && (
+          <button type="button" onClick={handleBuscar} style={btnBuscar}>Buscar</button>
+          {hayFiltrosActivos && (
             <button
               type="button"
-              onClick={() => {
-                setFiltroCodigo('');
-                setFiltroEstado('');
-                setFiltroFechaCreacion('');
-              }}
+              onClick={handleLimpiarFiltros}
               style={{ ...btnLimpiar, alignSelf: 'flex-end' }}
             >
               Limpiar filtros
@@ -172,14 +198,14 @@ export function Productos({ onSeleccionar }: ProductosProps) {
                 </tr>
               </thead>
               <tbody>
-                {productosPagina.length === 0 ? (
+                {productos.length === 0 ? (
                   <tr>
                     <td colSpan={6} style={{ textAlign: 'center', padding: '32px', color: '#666' }}>
                       No hay productos registrados.
                     </td>
                   </tr>
                 ) : (
-                  productosPagina.map((p) => {
+                  productos.map((p) => {
                     const estado = estadoProducto(p);
                     const verificador = p.Verificador_producto ?? (p as Producto & { verificador_producto?: string }).verificador_producto;
                     const fecha = p.FechaCreacion_producto ?? (p as Producto & { fechaCreacion_producto?: string }).fechaCreacion_producto;

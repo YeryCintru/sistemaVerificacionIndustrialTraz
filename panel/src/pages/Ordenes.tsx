@@ -1,21 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BotonLogout } from '../components/BotonLogout';
-import { getOrdenes } from '../services/api';
+import { getOrdenesPaginated } from '../services/api';
 import type { OrdenProduccion } from '../services/api';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 15;
 
 const ESTADOS_ORDEN = ['Pendiente', 'En Progreso', 'Cerrada'] as const;
 type EstadoFiltro = '' | (typeof ESTADOS_ORDEN)[number];
 
 
-
-function coincideFecha(fechaIso: string | undefined, fechaFiltro: string): boolean {
-  if (!fechaFiltro) return true;
-  if (!fechaIso) return false;
-  return new Date(fechaIso).toISOString().slice(0, 10) === fechaFiltro;
-}
 
 function formatearFecha(fechaIso: string | undefined): string {
   if (!fechaIso) return '-';
@@ -29,15 +23,26 @@ interface OrdenesProps {
 export function Ordenes({ onSeleccionar }: OrdenesProps) {
   const navigate = useNavigate();
   const [ordenes, setOrdenes] = React.useState<OrdenProduccion[]>([]);
+  const [totalItems, setTotalItems] = React.useState(0);
+  const [totalPaginas, setTotalPaginas] = React.useState(1);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
 
+  const [filtroCodigoOrden, setFiltroCodigoOrden] = React.useState('');
   const [filtroLote, setFiltroLote] = React.useState('');
   const [filtroEstado, setFiltroEstado] = React.useState<EstadoFiltro>('');
   const [filtroFecha, setFiltroFecha] = React.useState('');
   const [filtroFechaFinal, setFiltroFechaFinal] = React.useState('');
   const [filtroProducto, setFiltroProducto] = React.useState('');
   const [paginaActual, setPaginaActual] = React.useState(1);
+  const [filtrosAplicados, setFiltrosAplicados] = React.useState({
+    codigoOrden: '',
+    lote: '',
+    estado: '',
+    fechaInicio: '',
+    fechaFinal: '',
+    producto: '',
+  });
 
   React.useEffect(() => {
     let cancelado = false;
@@ -45,8 +50,21 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
       setLoading(true);
       setError('');
       try {
-        const data = await getOrdenes();
-        if (!cancelado) setOrdenes(data);
+        const response = await getOrdenesPaginated({
+          page: paginaActual,
+          limit: PAGE_SIZE,
+          codigo_ordenProd: filtrosAplicados.codigoOrden || undefined,
+          lote_ordenProd: filtrosAplicados.lote || undefined,
+          estado_ordenProd: filtrosAplicados.estado || undefined,
+          codigo_producto: filtrosAplicados.producto || undefined,
+          fechaInicio_ordenProd: filtrosAplicados.fechaInicio || undefined,
+          fechaCierre_ordenProd: filtrosAplicados.fechaFinal || undefined,
+        });
+        if (!cancelado) {
+          setOrdenes(response.data);
+          setTotalItems(response.totalItems);
+          setTotalPaginas(Math.max(1, response.totalPages));
+        }
       } catch {
         if (!cancelado) setError('No se pudieron cargar las órdenes de producción.');
       } finally {
@@ -55,47 +73,48 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
     };
     cargar();
     return () => { cancelado = true; };
-  }, []);
-
-  const ordenesFiltradas = React.useMemo(() => {
-    return ordenes.filter((orden) => {
-      const lote = orden.Lote_ordenProd?.toLowerCase() ?? '';
-      const busqueda = filtroLote.trim().toLowerCase();
-      if (busqueda && !lote.includes(busqueda)) return false;
-
-      if (filtroEstado && orden.Estado_ordenProd !== filtroEstado) return false;
-
-      if (!coincideFecha(orden.FechaInicio_ordenProd, filtroFecha)) return false;
-
-      return true;
-    });
-  }, [ordenes, filtroLote, filtroEstado, filtroFecha]);
-
-  //Sacar el número de páginas
-  const totalPaginas = Math.max(1, Math.ceil(ordenesFiltradas.length / PAGE_SIZE));
-
-  React.useEffect(() => {
-    if (paginaActual > totalPaginas) setPaginaActual(totalPaginas);
-  }, [paginaActual, totalPaginas]);
-
-  React.useEffect(() => {
-    setPaginaActual(1);
-  }, [filtroLote, filtroEstado, filtroFecha]);
-
-  //Lógica de paginación
-  const indiceInicio = (paginaActual - 1) * PAGE_SIZE;
-  const indiceFin = Math.min(indiceInicio + PAGE_SIZE, ordenesFiltradas.length);
-  const ordenesPagina = ordenesFiltradas.slice(indiceInicio, indiceFin);
+  }, [paginaActual, filtrosAplicados]);
 
   const handleSeleccionarOrden = (orden: OrdenProduccion) => {
     onSeleccionar(orden);
     navigate('/detalle');
   };
 
+  const handleBuscar = () => {
+    setFiltrosAplicados({
+      codigoOrden: filtroCodigoOrden,
+      lote: filtroLote,
+      estado: filtroEstado,
+      fechaInicio: filtroFecha,
+      fechaFinal: filtroFechaFinal,
+      producto: filtroProducto,
+    });
+    setPaginaActual(1);
+  };
+
+  const handleLimpiarFiltros = () => {
+    setFiltroCodigoOrden('');
+    setFiltroLote('');
+    setFiltroEstado('');
+    setFiltroFecha('');
+    setFiltroFechaFinal('');
+    setFiltroProducto('');
+    setFiltrosAplicados({
+      codigoOrden: '',
+      lote: '',
+      estado: '',
+      fechaInicio: '',
+      fechaFinal: '',
+      producto: '',
+    });
+    setPaginaActual(1);
+  };
+
   const irAPagina = (pagina: number) => {
     if (pagina >= 1 && pagina <= totalPaginas) setPaginaActual(pagina);
   };
 
+  // Paginas visibles en el paginador
   const paginasVisibles = React.useMemo(() => {
     const maxVisibles = 5;
     let inicio = Math.max(1, paginaActual - Math.floor(maxVisibles / 2));
@@ -106,15 +125,10 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
     return paginas;
   }, [paginaActual, totalPaginas]);
 
-  const totalFormateado = ordenesFiltradas.length.toLocaleString('es-ES');
-  const rangoInicio = ordenesFiltradas.length === 0 ? 0 : indiceInicio + 1;
-  const rangoFin = indiceFin;
-
-  const productosUnicos = React.useMemo(() => {
-    const nombres = new Set(ordenes.map((o) => o.Nombre_producto).filter(Boolean));
-    return Array.from(nombres).sort();
-  }, [ordenes]);
-
+  const totalFormateado = totalItems.toLocaleString('es-ES');
+  const rangoInicio = totalItems === 0 ? 0 : (paginaActual - 1) * PAGE_SIZE + 1;
+  const rangoFin = totalItems === 0 ? 0 : Math.min((paginaActual - 1) * PAGE_SIZE + ordenes.length, totalItems);
+  
   const inputFiltroStyle: React.CSSProperties = {
     width: '100%',
     padding: '10px 12px',
@@ -198,6 +212,19 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
           borderRadius: '8px',
           border: '1px solid #eee',
         }}>
+          <div style={{ flex: '0 1 180px' }}>
+            <label style={{ display: 'block', fontWeight: 'bold', color: '#666', fontSize: '14px', marginBottom: '6px' }}>
+              Código de orden
+            </label>
+            <input
+              type="text"
+              placeholder="Buscar por orden..."
+              value={filtroCodigoOrden}
+              onChange={(e) => setFiltroCodigoOrden(e.target.value)}
+              style={inputFiltroStyle}
+            />
+          </div>
+
           <div style={{ flex: '1 1 220px' }}>
             <label style={{ display: 'block', fontWeight: 'bold', color: '#666', fontSize: '14px', marginBottom: '6px' }}>
               Código de lote
@@ -215,16 +242,13 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
             <label style={{ display: 'block', fontWeight: 'bold', color: '#666', fontSize: '14px', marginBottom: '6px' }}>
               Producto
             </label>
-            <select
+            <input
+              type="text"
+              placeholder="Buscar por producto..."
               value={filtroProducto}
               onChange={(e) => setFiltroProducto(e.target.value)}
               style={{ ...inputFiltroStyle, backgroundColor: 'white', cursor: 'pointer' }}
-            >
-              <option value="">Todos</option>
-              {productosUnicos.map((nombre) => (
-                <option key={nombre} value={nombre}>{nombre}</option>
-              ))}
-            </select>
+            />
           </div>
 
           <div style={{ flex: '0 1 180px' }}>
@@ -269,6 +293,7 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
 
           <button
             type="button"
+            onClick={handleBuscar}
             style={{
               padding: '10px 24px',
               fontSize: '14px',
@@ -286,13 +311,7 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
 
           {(filtroLote || filtroEstado || filtroFecha || filtroFechaFinal || filtroProducto) && (
             <button
-              onClick={() => {
-                setFiltroLote('');
-                setFiltroEstado('');
-                setFiltroFecha('');
-                setFiltroFechaFinal('');
-                setFiltroProducto('');
-              }}
+              onClick={handleLimpiarFiltros}
               style={{
                 padding: '10px 16px',
                 fontSize: '14px',
@@ -335,14 +354,14 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
                 </tr>
               </thead>
               <tbody>
-                {ordenesPagina.length === 0 ? (
+                {ordenes.length === 0 ? (
                   <tr>
                     <td colSpan={8} style={{ textAlign: 'center', padding: '32px', color: '#666' }}>
-                      No hay órdenes que coincidan con los filtros.
+                      No hay órdenes de producción.
                     </td>
                   </tr>
                 ) : (
-                  ordenesPagina.map((orden) => (
+                  ordenes.map((orden) => (
                       <tr
                         key={orden.Id_ordenProd ?? orden.Codigo_ordenProd}
                         style={{ borderBottom: '1px solid #eee' }}
