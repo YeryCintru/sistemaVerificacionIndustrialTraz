@@ -117,7 +117,8 @@ export class OrdenService {
             resultado_log: 'Éxito',
             comentarios_log: `Código: ${newOrden.Codigo_ordenProd || newOrden.codigo_ordenProd || 'N/A'}`,
             id_operario: requestingOperario.Id_operario,
-            id_ordenProd: id
+            id_ordenProd: id,
+            id_producto: newOrden.Id_producto
         });
 
         return newOrden;
@@ -162,7 +163,8 @@ export class OrdenService {
             accion_log: 'Actualizar orden',
             resultado_log: 'Éxito',
             id_operario: requestingOperario.Id_operario,
-            id_ordenProd: id
+            id_ordenProd: id,
+            id_producto: updatedOrden.Id_producto
         });
 
         return updatedOrden;
@@ -212,7 +214,8 @@ export class OrdenService {
             resultado_log: 'Éxito',
             comentarios_log: `ID: ${id}, Estado anterior: ${ordenExistente.Estado_ordenProd},  Nuevo: ${estado_ordenProd}`,
             id_operario: requestingOperario.Id_operario,
-            id_ordenProd: id
+            id_ordenProd: id,
+            id_producto: ordenActualizada.Id_producto
         });
 
         // Enviar a través de WebSockets (solo a la sala de esta orden)
@@ -256,7 +259,8 @@ export class OrdenService {
             resultado_log: 'Éxito',
             comentarios_log: `ID: ${id}, Cantidad anterior: ${ordenExistente.Cantidad_ordenProd}, Nueva: ${cantidadTotal}`,
             id_operario: requestingOperario.Id_operario,
-            id_ordenProd: id
+            id_ordenProd: id,
+            id_producto: ordenActualizada.Id_producto
         });
 
         // Enviar a través de WebSockets (solo a la sala de esta orden)
@@ -319,7 +323,8 @@ export class OrdenService {
             resultado_log: resultado,
             comentarios_log: comentarios || this.formatearComentarioVerificacion(numeroPieza, resultado),
             id_operario: requestingOperario.Id_operario,
-            id_ordenProd: id
+            id_ordenProd: id,
+            id_producto: ordenActualizada.Id_producto
         });
 
         // Enviar a través de WebSockets (solo a la sala de esta orden)
