@@ -293,20 +293,24 @@ export class OrdenService {
             throw new Error('OrdenPendiente');
         }
 
+        
+
         const numeroPieza = (ordenExistente.CantidadCompletada_ordenProd || 0) + 1;
         let ordenActualizada = ordenExistente;
 
-        if (resultado === 'Correcto') {
-            // Incrementar cantidad
-            await this.ordenRepository.incrementCantidadCompletada(id);
-            ordenActualizada = await this.ordenRepository.findById(id);
-
-            // Verificar si se ha completado la orden
+        // Verificar si se ha completado la orden
             if (ordenActualizada.CantidadCompletada_ordenProd >= ordenActualizada.Cantidad_ordenProd) {
                 // Enviar a través de WebSockets (solo a la sala de esta orden)
                 this.socketService.toRoom(`order_${id}`, 'ordenCompletada', ordenActualizada);
                 throw new Error('CantidadCompletaOrden');
             }
+        
+        if (resultado === 'Correcto') {
+            // Incrementar cantidad
+            await this.ordenRepository.incrementCantidadCompletada(id);
+            ordenActualizada = await this.ordenRepository.findById(id);
+
+            
         }
 
         // Registrar en auditoría usando la nueva función para el comentario
