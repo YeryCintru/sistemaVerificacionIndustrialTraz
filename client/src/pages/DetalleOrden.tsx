@@ -209,8 +209,7 @@ export function DetalleOrden({ orden, onVolver, setOrdenActual }: DetalleOrdenPr
             }}>
               <span style={{ fontSize: '40px' }}>📦</span>
             </div>
-            <h3 style={{ fontSize: '22px', margin: '10px 0', color: '#333' }}>{orden.Nombre_producto}</h3>
-            <p style={{ color: '#666' }}>ID Producto: {orden.Id_producto}</p>
+            <h3 style={{ fontSize: '22px', margin: '10px 0', color: '#333' }}>{orden.Codigo_producto}</h3>
           </div>
 
           <button
