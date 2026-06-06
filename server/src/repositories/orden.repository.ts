@@ -25,7 +25,7 @@ export class OrdenRepository {
         const totalItems = Number((countRows[0] as any)?.totalItems ?? 0);
 
         const selectQuery = `
-            SELECT o.*, p.Nombre_producto
+            SELECT o.*, p.Codigo_producto
             FROM Orden_produccion o
             JOIN Producto p ON o.Id_producto = p.Id_producto
             ${whereSql}
@@ -44,7 +44,7 @@ export class OrdenRepository {
     async findAll(): Promise<any[]> {
         // Hacemos un JOIN para traer el nombre del producto relacionado
         const query = `
-            SELECT o.*, p.Nombre_producto 
+            SELECT o.*, p.Codigo_producto 
             FROM Orden_produccion o
             JOIN Producto p ON o.Id_producto = p.Id_producto
             ORDER BY o.FechaInicio_ordenProd DESC
@@ -60,7 +60,7 @@ export class OrdenRepository {
      */
     async findById(id: number): Promise<any | null> {
         const query = `
-            SELECT o.*, p.Nombre_producto 
+            SELECT o.*, p.Codigo_producto 
             FROM Orden_produccion o
             JOIN Producto p ON o.Id_producto = p.Id_producto
             WHERE o.Id_ordenProd = ?
@@ -76,7 +76,7 @@ export class OrdenRepository {
      */
     async findByCodigo(codigo: string): Promise<any | null> {
         const query = `
-            SELECT o.*, p.Nombre_producto 
+            SELECT o.*, p.Codigo_producto 
             FROM Orden_produccion o
             JOIN Producto p ON o.Id_producto = p.Id_producto
             WHERE o.Codigo_ordenProd = ?
