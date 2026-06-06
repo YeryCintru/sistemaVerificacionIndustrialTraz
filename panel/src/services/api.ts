@@ -18,7 +18,7 @@ export interface OrdenProduccion {
   Estado_ordenProd: string;
   Comentarios_ordenProd?: string;
   Id_producto: number;
-  Nombre_producto: string;
+  Codigo_producto: string;
 }
 
 /**
