@@ -43,6 +43,20 @@ export function DetalleOrden({ orden, onVolver, setOrdenActual }: DetalleOrdenPr
   }, [orden.Estado_ordenProd, orden.Cantidad_ordenProd, orden.CantidadCompletada_ordenProd, navigate]);
 
   const handleVerificarPieza = () => {
+    // Usamos ?? 0 por si los valores vienen como undefined desde el servidor
+    const completada = orden.CantidadCompletada_ordenProd ?? 0;
+    const total = orden.Cantidad_ordenProd ?? 0;
+
+    if (orden.Estado_ordenProd === 'Cerrada') {
+      alert('Esta orden ya está cerrada. No se pueden verificar más piezas.');
+      return;
+    }else if (orden.Estado_ordenProd === 'Pendiente') {
+      alert('Esta orden aún no ha sido iniciada. Por favor, espere a que el supervisor la ordene antes de verificar piezas.');
+      return;
+    }else if (completada >= total) {
+      alert('¡La orden ya ha sido completada! No se pueden verificar más piezas.');
+      return;
+    }
     navigate('/verificacion');
   };
 
@@ -195,8 +209,7 @@ export function DetalleOrden({ orden, onVolver, setOrdenActual }: DetalleOrdenPr
             }}>
               <span style={{ fontSize: '40px' }}>📦</span>
             </div>
-            <h3 style={{ fontSize: '22px', margin: '10px 0', color: '#333' }}>{orden.Nombre_producto}</h3>
-            <p style={{ color: '#666' }}>ID Producto: {orden.Id_producto}</p>
+            <h3 style={{ fontSize: '22px', margin: '10px 0', color: '#333' }}>{orden.Codigo_producto}</h3>
           </div>
 
           <button
