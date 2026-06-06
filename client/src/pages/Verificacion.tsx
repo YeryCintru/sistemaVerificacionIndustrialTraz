@@ -100,7 +100,7 @@ export function Verificacion({ orden, setOrdenActual }: VerificacionProps) {
           </div>
           <div>
             <span style={{ color: '#666', fontSize: '14px', display: 'block' }}>Producto</span>
-            <strong style={{ fontSize: '18px' }}>{orden.Nombre_producto}</strong>
+            <strong style={{ fontSize: '18px' }}>{orden.Codigo_producto}</strong>
           </div>
           <div>
             <span style={{ color: '#666', fontSize: '14px', display: 'block' }}>Progreso</span>
