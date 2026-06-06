@@ -234,6 +234,10 @@ export class OrdenController {
                 res.status(404).json({ error: 'Orden no encontrada' });
             } else if (msg === 'OrdenYaCerrada') {
                 res.status(400).json({ error: 'No se puede verificar una orden cerrada' });
+            } else if (msg === 'CantidadCompletaOrden') {
+                res.status(400).json({ error: 'La orden ya ha sido completada' });
+           } else if (msg === 'OrdenPendiente') {
+                res.status(400).json({ error: 'No se puede verificar una orden pendiente' });
             } else {
                 console.error('Error al realizar la verificación:', error);
                 res.status(400).json({ error: 'Error al realizar la verificación' });
