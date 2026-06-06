@@ -326,6 +326,7 @@ export interface RegistroAuditoria {
   Nombre_operario?: string;
   Lote_ordenProd?: string;
   Nombre_producto?: string;
+  Codigo_producto?: string;
 }
 
 export async function getAuditoria(): Promise<RegistroAuditoria[]> {
