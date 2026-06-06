@@ -289,8 +289,8 @@ export function Auditoria() {
                   registros.map((r) => {
                     const resultado = resultadoLog(r);
                     const refOrden = r.Lote_ordenProd ? `Lote: ${r.Lote_ordenProd}` : '';
-                    const refProducto = r.Nombre_producto ? r.Nombre_producto : '';
-                    const referencia = [refOrden, refProducto].filter(Boolean).join(' · ') || '-';
+                    const refProducto = r.Codigo_producto ? r.Codigo_producto : '';
+                    const referencia = [refOrden, refProducto].filter(Boolean).join(' - ') || '-';
                     return (
                       <tr key={r.Id_log ?? numeroLog(r)} style={{ borderBottom: '1px solid #eee' }}>
                         <td style={tdStyle}>{numeroLog(r)}</td>
@@ -369,7 +369,7 @@ export function Auditoria() {
               />
               <Item label="Operario" value={detalle.Nombre_operario ?? '-'} />
               <Item label="Lote orden" value={detalle.Lote_ordenProd ?? '-'} />
-              <Item label="Producto" value={detalle.Nombre_producto ?? '-'} />
+              <Item label="Producto" value={detalle.Codigo_producto ?? '-'} />
               <Item label="Comentarios" value={comentariosLog(detalle) || 'Sin comentarios'} multiline />
             </dl>
 

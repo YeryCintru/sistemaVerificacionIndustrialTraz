@@ -368,7 +368,7 @@ export function Ordenes({ onSeleccionar }: OrdenesProps) {
                       >
                         <td style={tdStyle}>{orden.Codigo_ordenProd}</td>
                         <td style={tdStyle}>{orden.Lote_ordenProd}</td>
-                        <td style={tdStyle}>{orden.Nombre_producto}</td>
+                        <td style={tdStyle}>{orden.Codigo_producto}</td>
                         <td style={tdStyle}>
                           {orden.CantidadCompletada_ordenProd ?? 0} / {orden.Cantidad_ordenProd}
                         </td>
