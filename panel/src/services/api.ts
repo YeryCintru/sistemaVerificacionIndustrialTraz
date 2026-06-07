@@ -417,3 +417,14 @@ export async function getOperariosPaginated(
   const response = await axios.get<PaginatedResponse<Operario>>(url);
   return response.data;
 }
+
+export interface CrearOperarioPayload {
+  Nombre_operario: string;
+  Clave_operario: string;
+  Rol_operario: string;
+}
+
+export async function crearOperario(data: CrearOperarioPayload): Promise<Operario> {
+  const response = await axios.post<Operario>(`${BASE_URL}/api/operarios/`, data);
+  return response.data;
+}
