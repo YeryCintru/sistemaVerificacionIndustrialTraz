@@ -17,6 +17,8 @@ export function Usuarios() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
 
+  const [esAdmin, setEsAdmin] = React.useState(false);
+
   const [filtroNombre, setFiltroNombre] = React.useState('');
   const [filtroRol, setFiltroRol] = React.useState<RolFiltro>('');
   const [paginaActual, setPaginaActual] = React.useState(1);
@@ -48,6 +50,20 @@ export function Usuarios() {
         if (!cancelado) setLoading(false);
       }
     };
+    
+    // Check for admin role
+    const usuarioData = localStorage.getItem('usuario');
+    if (usuarioData) {
+      try {
+        const usuario = JSON.parse(usuarioData);
+        if (usuario.Rol_operario === 'Admin') {
+          setEsAdmin(true);
+        }
+      } catch (e) {
+        console.error('Error parseando usuario', e);
+      }
+    }
+
     cargar();
     return () => { cancelado = true; };
   }, [paginaActual, filtrosAplicados]);
@@ -143,21 +159,23 @@ export function Usuarios() {
           <h2 style={{ margin: 0, color: '#333' }}>
             Gestión de Usuarios
           </h2>
-          {/* <button
-            onClick={() => navigate('/crear-usuario')}
-            style={{
-              padding: '10px 20px',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              backgroundColor: '#28a745',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}
-          >
-            + Crear usuario
-          </button> */}
+          {esAdmin && (
+            <button
+              onClick={() => navigate('/crear-usuario')}
+              style={{
+                padding: '10px 20px',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                backgroundColor: '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+              }}
+            >
+              + Crear usuario
+            </button>
+          )}
         </div>
 
         {/* Bloque superior: filtros */}

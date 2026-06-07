@@ -13,6 +13,7 @@ import { CrearProducto } from './pages/CrearProducto';
 import { DetalleProducto } from './pages/DetalleProducto';
 import { Auditoria } from './pages/Auditoria';
 import { Usuarios } from './pages/Usuarios';
+import { CrearUsuario } from './pages/CrearUsuario';
 
 import { useOrderSocket } from './hooks/useOrderSocket';
 
@@ -71,6 +72,7 @@ function App() {
         />
         <Route path="/auditoria" element={<Auditoria />} />
         <Route path="/usuarios" element={<Usuarios />} />
+        <Route path="/crear-usuario" element={<CrearUsuario />} />
         {/* Página de inicio / dashboard */}
         <Route path="/inicio" element={<Inicio />} />
         {/* Rutas por defecto - Redirigen al login */}
