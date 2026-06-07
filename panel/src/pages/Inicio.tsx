@@ -7,7 +7,7 @@ const navItems = [
   { id: 'btn-ordenes', label: '📄 Órdenes de Producción', route: '/ordenes' },
   { id: 'btn-producto', label: '📦 Producto', route: '/productos' },
   { id: 'btn-auditoria', label: '🔍 Auditoría', route: '/auditoria' },
-  { id: 'btn-operario', label: '👤 Operario', route: '/operarios' },
+  { id: 'btn-operario', label: '👤 Operario', route: '/usuarios' },
 ];
 
 export function Inicio() {
