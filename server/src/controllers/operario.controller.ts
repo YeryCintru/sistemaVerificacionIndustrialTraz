@@ -49,12 +49,12 @@ export class OperarioController {
 
     /**
      * GET /
-     * Lista todos los operarios.
+     * Lista todos los operarios (con paginación).
      */
     async getAll(req: Request, res: Response): Promise<void> {
         try {
-            const operarios = await this.operarioService.getOperarios();
-            res.status(200).json(operarios);
+            const result = await this.operarioService.getOperariosPaginated(req.query);
+            res.status(200).json(result);
         } catch (error) {
             console.error('Error al listar operarios:', error);
             res.status(500).json({ error: 'Error interno al listar operarios' });
