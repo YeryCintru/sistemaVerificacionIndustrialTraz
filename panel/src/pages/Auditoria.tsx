@@ -1,6 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BotonLogout } from '../components/BotonLogout';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import {
   accionLog,
   comentariosLog,
@@ -62,6 +65,78 @@ export function Auditoria() {
     fecha: '',
   });
   const [detalle, setDetalle] = React.useState<RegistroAuditoria | null>(null);
+  const [exportando, setExportando] = React.useState(false);
+
+  const handleExportar = async (formato: 'pdf' | 'excel') => {
+    if (totalItems === 0) {
+      alert("No hay datos para exportar.");
+      return;
+    }
+
+    setExportando(true);
+    try {
+      const response = await getAuditoriaPaginated({
+        page: 1,
+        limit: totalItems,
+        accion_log: filtrosAplicados.accion || undefined,
+        resultado_log: filtrosAplicados.resultado || undefined,
+        nombre_operario: filtrosAplicados.operario || undefined,
+        codigo_ordenProd: filtrosAplicados.codigoOrden || undefined,
+        lote_ordenProd: filtrosAplicados.lote || undefined,
+        codigo_producto: filtrosAplicados.codigoProducto || undefined,
+        momento_log: filtrosAplicados.fecha || undefined,
+      });
+
+      const datosCompletos = response.data;
+
+      const rows = datosCompletos.map(r => {
+        const refOrden = r.Lote_ordenProd ? `Lote: ${r.Lote_ordenProd}` : '';
+        const refProducto = r.Codigo_producto ? r.Codigo_producto : '';
+        const referencia = [refOrden, refProducto].filter(Boolean).join(' - ') || '-';
+        return [
+          numeroLog(r),
+          formatearFechaHora(momentoLog(r)),
+          accionLog(r),
+          resultadoLog(r),
+          r.Nombre_operario ?? '-',
+          referencia,
+          comentariosLog(r) || '-'
+        ];
+      });
+
+      if (formato === 'pdf') {
+        const doc = new jsPDF('landscape');
+        
+        doc.setFontSize(16);
+        doc.text("Informe de Auditoría", 14, 20);
+        doc.setFontSize(10);
+        doc.text(`Fecha de exportación: ${new Date().toLocaleString('es-ES')}`, 14, 28);
+        doc.text(`Total registros: ${totalItems}`, 14, 34);
+
+        autoTable(doc, {
+          startY: 40,
+          head: [['Nº Log', 'Momento', 'Acción', 'Resultado', 'Operario', 'Orden / Producto', 'Comentarios']],
+          body: rows,
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [0, 123, 255] },
+        });
+
+        doc.save(`auditoria_${new Date().getTime()}.pdf`);
+      } else if (formato === 'excel') {
+        const header = ['Nº Log', 'Momento', 'Acción', 'Resultado', 'Operario', 'Orden / Producto', 'Comentarios'];
+        const data = [header, ...rows];
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Auditoria");
+        XLSX.writeFile(wb, `auditoria_${new Date().getTime()}.xlsx`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error al exportar los datos. Inténtelo de nuevo.");
+    } finally {
+      setExportando(false);
+    }
+  };
 
   React.useEffect(() => {
     let cancelado = false;
@@ -258,6 +333,24 @@ export function Auditoria() {
               Limpiar filtros
             </button>
           )}
+          <button 
+            type="button" 
+            onClick={() => handleExportar('pdf')} 
+            style={{ ...btnLimpiar, backgroundColor: '#dc3545', alignSelf: 'flex-end' }}
+            disabled={exportando || totalItems === 0}
+            title="Exportar a PDF"
+          >
+            {exportando ? '...' : 'PDF'}
+          </button>
+          <button 
+            type="button" 
+            onClick={() => handleExportar('excel')} 
+            style={{ ...btnLimpiar, backgroundColor: '#28a745', alignSelf: 'flex-end' }}
+            disabled={exportando || totalItems === 0}
+            title="Exportar a Excel"
+          >
+            {exportando ? '...' : 'Excel'}
+          </button>
         </div>
 
         {loading ? (
