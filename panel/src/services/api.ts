@@ -384,3 +384,47 @@ export function momentoLog(r: RegistroAuditoria): string | Date | undefined {
 export function comentariosLog(r: RegistroAuditoria): string {
   return r.Comentarios_log ?? (r as RegistroAuditoria & { comentarios_log?: string }).comentarios_log ?? '';
 }
+
+export interface Operario {
+  Id_operario?: number;
+  Nombre_operario: string;
+  Rol_operario: string;
+}
+
+export interface GetOperariosParams {
+  page?: number;
+  limit?: number;
+  filtro?: string;
+  nombre_operario?: string;
+  rol_operario?: string;
+}
+
+export async function getOperariosPaginated(
+  params: GetOperariosParams = {}
+): Promise<PaginatedResponse<Operario>> {
+  const searchParams = new URLSearchParams();
+  (Object.entries(params) as [keyof GetOperariosParams, GetOperariosParams[keyof GetOperariosParams]][]).forEach(
+    ([key, value]) => {
+      if (value !== undefined && value !== null && String(value).trim() !== '') {
+        searchParams.append(key, String(value));
+      }
+    }
+  );
+  const query = searchParams.toString();
+  const url = query
+    ? `${BASE_URL}/api/operarios?${query}`
+    : `${BASE_URL}/api/operarios/`;
+  const response = await axios.get<PaginatedResponse<Operario>>(url);
+  return response.data;
+}
+
+export interface CrearOperarioPayload {
+  Nombre_operario: string;
+  Clave_operario: string;
+  Rol_operario: string;
+}
+
+export async function crearOperario(data: CrearOperarioPayload): Promise<Operario> {
+  const response = await axios.post<Operario>(`${BASE_URL}/api/operarios/`, data);
+  return response.data;
+}

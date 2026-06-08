@@ -4,6 +4,8 @@ import { Operario, OperarioCreation, OperarioLogin, OperarioAuthResponse, Operar
 import { AuditService } from './audit.service';
 import bcrypt from 'bcrypt';
 import jwt, { SignOptions } from 'jsonwebtoken';
+import { PaginationResult, getQueryString, parsePageLimit } from '../utils/pagination';
+import { OperarioFilters } from '../repositories/operario.repository';
 
 @Service()
 export class OperarioService {
@@ -73,6 +75,21 @@ export class OperarioService {
     }
     async getOperarios(): Promise<Omit<Operario, 'Clave_operario'>[]> {
         return await this.operarioRepository.findAll();
+    }
+
+    async getOperariosPaginated(query: any): Promise<PaginationResult<Omit<Operario, 'Clave_operario'>>> {
+        const { page, limit } = parsePageLimit(query);
+
+        const filters: OperarioFilters = {
+            filtro: getQueryString(query, 'filtro'),
+            nombre_operario: getQueryString(query, 'nombre_operario'),
+            rol_operario: getQueryString(query, 'rol_operario')
+        };
+
+        const { data, totalItems } = await this.operarioRepository.findPaginated(filters, page, limit);
+        const totalPages = limit > 0 ? Math.ceil(totalItems / limit) : 0;
+
+        return { data, totalItems, totalPages, currentPage: page };
     }
 
     /**
