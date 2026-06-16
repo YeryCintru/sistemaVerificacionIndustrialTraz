@@ -68,8 +68,16 @@ Abre una nueva terminal en la carpeta `/client`:
 ```bash
 cd client
 npm install
-npm run dev
+npm start
 ```
+
+### Opción 3: Despliegue parcial
+Yo personalmente he estado trabajando de forma híbrida:
+- Levanto siempre el backend (servidor) con la base de datos en el docker.
+- El panel aparte como explicado en la opción anterior para ver cambios en vivo.
+- El cliente aparte por supuesto también.
+
+(No he levantado nunca el servidor de forma individual)
 
 ## 📦 Empaquetado del Cliente
 
