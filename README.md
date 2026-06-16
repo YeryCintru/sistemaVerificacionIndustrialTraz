@@ -20,9 +20,9 @@ Este repositorio contiene los siguientes componentes principales:
 
 ## 🛠️ Cómo arrancar el proyecto
 
-Existen dos formas principales de arrancar el sistema: usando Docker para todos los servicios, o ejecutándolos individualmente en modo desarrollo.
+Existen tres formas principales de arrancar el sistema: usando Docker para todos los servicios, ejecutándolos individualmente en modo desarrollo o híbrido entre los dos. Yo recomiendo de la forma que he desarrollado yo: la primera y tercera opción.
 
-### Opción 1: Despliegue con Docker
+### Opción 1: Despliegue con Docker (Recomendada)
 
 En la raíz del proyecto, puedes arrancar la base de datos, el servidor API y el panel web simultáneamente usando Docker Compose:
 
@@ -37,7 +37,7 @@ Esto levantará los siguientes contenedores:
 
 *(Nota: El cliente de escritorio Electron debe ejecutarse siempre de manera local. Sigue el paso 4 de la Opción 2).*
 
-### Opción 2: Ejecución individual para desarrollo local
+### Opción 2: Ejecución individual para desarrollo local (Opcional)
 
 Si necesitas desarrollar o hacer cambios, es mejor arrancar cada componente individualmente.
 
@@ -71,7 +71,7 @@ npm install
 npm start
 ```
 
-### Opción 3: Despliegue parcial
+### Opción 3: Despliegue parcial (Recomendada)
 Yo personalmente he estado trabajando de forma híbrida:
 - Levanto siempre el backend (servidor) con la base de datos en el docker.
 - El panel aparte como explicado en la opción anterior para ver cambios en vivo.
