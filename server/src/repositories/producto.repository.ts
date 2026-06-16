@@ -123,15 +123,6 @@ export class ProductoRepository {
         return result.affectedRows > 0;
     }
 
-    /**
-     * Elimina un producto por su ID.
-     * @param id ID del producto.
-     * @returns Boolean indicando si se eliminó alguna fila.
-     */
-    async delete(id: number): Promise<boolean> {
-        const [result] = await pool.query<ResultSetHeader>('DELETE FROM Producto WHERE Id_producto = ?', [id]);
-        return result.affectedRows > 0;
-    }
 }
 
 export type ProductoFilters = {
@@ -143,6 +134,11 @@ export type ProductoFilters = {
     fechaCreacion_producto?: string;
 };
 
+/**
+ * Construye la cláusula WHERE para la consulta de productos basada en los filtros proporcionados.
+ * @param filters 
+ * @returns 
+ */
 function buildProductoWhere(filters: ProductoFilters): { whereSql: string; params: any[] } {
     const whereParts: string[] = [];
     const params: any[] = [];
