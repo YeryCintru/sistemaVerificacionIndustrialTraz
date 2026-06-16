@@ -14,11 +14,9 @@ export class OrdenController {
         this.ordenRouter.get('/codigo/:codigo', authMiddleware, this.getByCodigo.bind(this));
         this.ordenRouter.get('/:id', authMiddleware, this.getById.bind(this));
         this.ordenRouter.post('/', authMiddleware, this.create.bind(this));
-        this.ordenRouter.put('/:id', authMiddleware, this.update.bind(this));
         this.ordenRouter.patch('/:id/estado', authMiddleware, this.updateEstado.bind(this));
         this.ordenRouter.patch('/:id/cantidad', authMiddleware, this.updateCantidadTotal.bind(this));
         this.ordenRouter.post('/:id/verificar', authMiddleware, this.verificar.bind(this));
-        this.ordenRouter.delete('/:id', authMiddleware, this.delete.bind(this));
     }
 
     /**
@@ -102,35 +100,6 @@ export class OrdenController {
                 res.status(409).json({ error: 'El lote de producción ya existe' });
             } else {
                 res.status(400).json({ error: 'Datos de orden inválidos' });
-            }
-        }
-    }
-
-    /**
-     * PUT /:id
-     * Actualiza una orden existente.
-     */
-    async update(req: Request, res: Response): Promise<void> {
-        try {
-            const id = Number(req.params.id);
-            const data = req.body;
-            const requestingOperario = {
-                Id_operario: (req as any).operario.Id_operario,
-                Rol_operario: (req as any).operario.Rol_operario
-            };
-            const updatedOrden = await this.ordenService.updateOrden(id, data, requestingOperario);
-            res.status(200).json(updatedOrden);
-        } catch (error) {
-            const msg = (error as Error).message;
-            if (msg === 'UnauthorizedAccessError') {
-                res.status(403).json({ error: 'No tienes permisos para actualizar órdenes' });
-            } else if (msg === 'OrdenNotFound') {
-                res.status(404).json({ error: 'Orden no encontrada' });
-            } else if (msg === 'ProductoNotFound') {
-                res.status(400).json({ error: 'El producto asociado no existe' });
-            } else {
-                console.error('Error al actualizar orden:', error);
-                res.status(400).json({ error: 'Error al actualizar orden' });
             }
         }
     }
@@ -245,29 +214,4 @@ export class OrdenController {
         }
     }
 
-    /**
-     * DELETE /:id
-     * Elimina una orden.
-     */
-    async delete(req: Request, res: Response): Promise<void> {
-        try {
-            const id = Number(req.params.id);
-            const requestingOperario = {
-                Id_operario: (req as any).operario.Id_operario,
-                Rol_operario: (req as any).operario.Rol_operario
-            };
-            await this.ordenService.deleteOrden(id, requestingOperario);
-            res.status(204).send();
-        } catch (error) {
-            const msg = (error as Error).message;
-            if (msg === 'UnauthorizedAccessError') {
-                res.status(403).json({ error: 'No tienes permisos para eliminar órdenes' });
-            } else if (msg === 'OrdenNotFound') {
-                res.status(404).json({ error: 'Orden no encontrada' });
-            } else {
-                console.error('Error al eliminar orden:', error);
-                res.status(500).json({ error: 'Error al eliminar orden' });
-            }
-        }
-    }
 }
