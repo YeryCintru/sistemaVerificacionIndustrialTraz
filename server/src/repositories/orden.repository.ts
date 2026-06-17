@@ -132,6 +132,7 @@ export class OrdenRepository {
      * @returns Boolean indicando si se modificó alguna fila.
      */
     async update(id: number, data: Partial<OrdenProduccion>): Promise<boolean> {
+        // Construimos dinámicamente la consulta de actualización según los campos proporcionados
         const fields = Object.keys(data).map(key => `${key.charAt(0).toUpperCase() + key.slice(1)} = ?`).join(', ');
         const values = Object.values(data);
         
@@ -158,15 +159,6 @@ export class OrdenRepository {
         return result.affectedRows > 0;
     }
 
-    /**
-     * Elimina una orden de producción por su ID.
-     * @param id ID de la orden.
-     * @returns Boolean indicando si se eliminó alguna fila.
-     */
-    async delete(id: number): Promise<boolean> {
-        const [result] = await pool.query<ResultSetHeader>('DELETE FROM Orden_produccion WHERE Id_ordenProd = ?', [id]);
-        return result.affectedRows > 0;
-    }
 }
 
 export type OrdenFilters = {
@@ -179,7 +171,11 @@ export type OrdenFilters = {
     fechaInicio_ordenProd?: string;
     fechaCierre_ordenProd?: string;
 };
-
+/**
+ * Construye la cláusula WHERE y los parámetros para la consulta de órdenes según los filtros proporcionados.
+ * @param filters 
+ * @returns 
+ */
 function buildOrdenWhere(filters: OrdenFilters): { whereSql: string; params: any[] } {
     const whereParts: string[] = [];
     const params: any[] = [];

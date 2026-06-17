@@ -93,9 +93,13 @@ axios.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
+      // Si el 401 viene del intento de login, no forzamos la redirección
+      if (error.config?.url?.includes('/login')) {
+        return Promise.reject(error);
+      }
       console.warn('Token inválido o expirado, limpiando sesión');
       clearToken();
-      window.location.href = '/login'; // Redirigir al login
+      window.location.hash = '#/login'; // Redirigir al login usando el hash (HashRouter)
     } else if (error.response?.status === 403) {
       console.warn('Acceso no autorizado para esta acción');
     }

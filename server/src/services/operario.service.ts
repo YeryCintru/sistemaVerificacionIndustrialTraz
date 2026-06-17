@@ -127,37 +127,6 @@ export class OperarioService {
     }
 
     /**
-     * Actualiza un operario existente.
-     * @param id ID del operario.
-     * @param data Datos a actualizar.
-     * @param requestingOperario Operario que realiza la acción
-     */
-    async updateOperario(id: number, data: Partial<Operario>, requestingOperario: { Id_operario: number, Rol_operario: string }): Promise<Omit<Operario, 'Clave_operario'>> {
-        // Validar permisos: Solo Admin puede actualizar operarios
-        if (requestingOperario.Rol_operario !== 'Admin') {
-            throw new Error('UnauthorizedAccessError');
-        }
-
-        const updateData: Partial<Operario> = { ...data };
-
-        // Si se cambia la clave, hashearla
-        if (updateData.Clave_operario) {
-            const saltRounds = 10;
-            updateData.Clave_operario = await bcrypt.hash(updateData.Clave_operario, saltRounds);
-        }
-
-        const updated = await this.operarioRepository.update(id, updateData);
-        if (!updated) {
-            throw new Error('OperarioNotFound');
-        }
-
-        const updatedOperario = await this.operarioRepository.findById(id);
-        if (!updatedOperario) throw new Error('InternalError');
-
-        return updatedOperario;
-    }
-
-    /**
      * Genera un JWT token para un operario
      * @param operario Operario a codificar en el token
      * @returns JWT token
@@ -194,20 +163,4 @@ export class OperarioService {
         }
     }
 
-    /**
-     * Elimina un operario.
-     * @param id ID del operario.
-     * @param requestingOperario Operario que realiza la acción
-     */
-    async deleteOperario(id: number, requestingOperario: { Id_operario: number, Rol_operario: string }): Promise<void> {
-        // Validar permisos: Solo Admin puede eliminar operarios
-        if (requestingOperario.Rol_operario !== 'Admin') {
-            throw new Error('UnauthorizedAccessError');
-        }
-
-        const deleted = await this.operarioRepository.delete(id);
-        if (!deleted) {
-            throw new Error('OperarioNotFound');
-        }
-    }
 }

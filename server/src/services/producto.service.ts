@@ -134,28 +134,4 @@ export class ProductoService {
         return updatedProducto;
     }
 
-    /**
-     * Elimina un producto.
-     * @param id ID del producto.
-     * @param requestingOperario Operario que realiza la acción
-     */
-    async deleteProducto(id: number, requestingOperario: { Id_operario: number, Rol_operario: string }): Promise<void> {
-        // Validar permisos: Solo Admin puede eliminar
-        if (requestingOperario.Rol_operario !== 'Admin') {
-            throw new Error('UnauthorizedAccessError');
-        }
-
-        const deleted = await this.productoRepository.delete(id);
-        if (!deleted) {
-            throw new Error('ProductoNotFound');
-        }
-
-        await this.auditService.logAction({
-            accion_log: 'Eliminar producto',
-            resultado_log: 'Éxito',
-            comentarios_log: `ID: ${id}`,
-            id_operario: requestingOperario.Id_operario,
-            id_producto: id
-        });
-    }
 }

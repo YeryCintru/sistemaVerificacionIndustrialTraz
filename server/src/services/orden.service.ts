@@ -124,51 +124,6 @@ export class OrdenService {
         return newOrden;
     }
 
-    /**
-     * Actualiza una orden de producción existente.
-     * @param id ID de la orden.
-     * @param data Datos a actualizar.
-     * @param requestingOperario Operario que realiza la acción
-     */
-    async updateOrden(id: number, data: Partial<OrdenProduccion>, requestingOperario: { Id_operario: number, Rol_operario: string }): Promise<any> {
-        // Validar permisos: Solo Admin y Supervisor pueden actualizar
-        if (requestingOperario.Rol_operario !== 'Admin' && requestingOperario.Rol_operario !== 'Supervisor') {
-            throw new Error('UnauthorizedAccessError');
-        }
-
-        // Si se intenta cambiar el producto, validar que existe
-        if (data.id_producto) {
-            const producto = await this.productoRepository.findById(data.id_producto);
-            if (!producto) {
-                throw new Error('ProductoNotFound');
-            }
-        }
-
-        if (data.estado_ordenProd === 'Cerrada') {
-            if (!data.fechaCierre_ordenProd) {
-                data.fechaCierre_ordenProd = new Date();
-            }
-        }
-
-        const updated = await this.ordenRepository.update(id, data);
-        if (!updated) {
-            throw new Error('OrdenNotFound');
-        }
-        const updatedOrden = await this.ordenRepository.findById(id);
-        if (!updatedOrden) {
-            throw new Error('InternalError');
-        }
-
-        await this.auditService.logAction({
-            accion_log: 'Actualizar orden',
-            resultado_log: 'Éxito',
-            id_operario: requestingOperario.Id_operario,
-            id_ordenProd: id,
-            id_producto: updatedOrden.Id_producto
-        });
-
-        return updatedOrden;
-    }
 
     /**
      * Actualiza únicamente el estado de una orden de producción.
@@ -331,31 +286,6 @@ export class OrdenService {
         this.socketService.toRoom(`order_${id}`, 'ordenActualizada', ordenActualizada);
 
         return ordenActualizada;
-    }
-
-    /**
-     * Elimina una orden de producción.
-     * @param id ID de la orden.
-     * @param requestingOperario Operario que realiza la acción
-     */
-    async deleteOrden(id: number, requestingOperario: { Id_operario: number, Rol_operario: string }): Promise<void> {
-        // Validar permisos: Solo Admin puede eliminar
-        if (requestingOperario.Rol_operario !== 'Admin') {
-            throw new Error('UnauthorizedAccessError');
-        }
-
-        const deleted = await this.ordenRepository.delete(id);
-        if (!deleted) {
-            throw new Error('OrdenNotFound');
-        }
-
-        await this.auditService.logAction({
-            accion_log: 'Eliminar orden',
-            resultado_log: 'Éxito',
-            comentarios_log: `ID: ${id}`,
-            id_operario: requestingOperario.Id_operario,
-            id_ordenProd: id
-        });
     }
 
     /**

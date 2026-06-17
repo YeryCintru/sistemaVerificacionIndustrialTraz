@@ -13,8 +13,6 @@ export class OperarioController {
         this.operarioRouter.post('/auth/login', this.login.bind(this));
         this.operarioRouter.get('/', authMiddleware, this.getAll.bind(this));
         this.operarioRouter.post('/', authMiddleware, this.register.bind(this));
-        this.operarioRouter.put('/:id', authMiddleware, this.update.bind(this));
-        this.operarioRouter.delete('/:id', authMiddleware, this.delete.bind(this));
     }
 
     /**
@@ -87,58 +85,4 @@ export class OperarioController {
         }
     }
 
-    /**
-     * PUT /:id
-     * Actualiza un operario existente.
-     */
-    async update(req: Request, res: Response): Promise<void> {
-        try {
-            const id = Number(req.params.id);
-            const data = req.body;
-            const requestingOperario = {
-                Id_operario: (req as any).operario.Id_operario,
-                Rol_operario: (req as any).operario.Rol_operario
-            };
-            const updatedOperario = await this.operarioService.updateOperario(id, data, requestingOperario);
-            res.status(200).json(updatedOperario);
-        } catch (error) {
-            const msg = (error as Error).message;
-            if (msg === 'UnauthorizedAccessError') {
-                res.status(403).json({ error: 'No tienes permisos para actualizar operarios' });
-            } else if (msg === 'OperarioNotFound') {
-                res.status(404).json({ error: 'Operario no encontrado' });
-            } else {
-                console.error('Error al actualizar operario:', error);
-                res.status(400).json({ error: 'Error al actualizar operario' });
-            }
-        }
-    }
-
-    /**
-     * DELETE /:id
-     * Elimina un operario.
-     */
-    async delete(req: Request, res: Response): Promise<void> {
-        try {
-            const id = Number(req.params.id);
-            const requestingOperario = {
-                Id_operario: (req as any).operario.Id_operario,
-                Rol_operario: (req as any).operario.Rol_operario
-            };
-            await this.operarioService.deleteOperario(id, requestingOperario);
-            res.status(204).send();
-        } catch (error) {
-            const msg = (error as Error).message;
-            if (msg === 'UnauthorizedAccessError') {
-                res.status(403).json({ error: 'No tienes permisos para eliminar operarios' });
-            } else if (msg === 'OperarioNotFound') {
-                res.status(404).json({ error: 'Operario no encontrado' });
-            } else if ((error as any).code === 'ER_ROW_IS_REFERENCED_2') {
-                res.status(409).json({ error: 'No se puede eliminar el operario porque tiene registros asociados (logs)' });
-            } else {
-                console.error('Error al eliminar operario:', error);
-                res.status(500).json({ error: 'Error al eliminar operario' });
-            }
-        }
-    }
 }

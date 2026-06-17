@@ -97,35 +97,6 @@ export class AuditRepository {
         return rows.length > 0 ? rows[0] : null;
     }
 
-    /**
-     * Actualiza un registro de auditoría existente.
-     * @param id ID del log.
-     * @param data Datos a actualizar.
-     * @returns Boolean indicando si se modificó alguna fila.
-     */
-    async update(id: number, data: Partial<AuditLog>): Promise<boolean> {
-        const fields = Object.keys(data).map(key => `${key.charAt(0).toUpperCase() + key.slice(1)} = ?`).join(', ');
-        const values = Object.values(data);
-        
-        if (fields.length === 0) return false;
-
-        const [result] = await pool.query<ResultSetHeader>(
-            `UPDATE Auditoria SET ${fields} WHERE Id_log = ?`,
-            [...values, id]
-        );
-
-        return result.affectedRows > 0;
-    }
-
-    /**
-     * Elimina un registro de auditoría por su ID.
-     * @param id ID del log.
-     * @returns Boolean indicando si se eliminó alguna fila.
-     */
-    async delete(id: number): Promise<boolean> {
-        const [result] = await pool.query<ResultSetHeader>('DELETE FROM Auditoria WHERE Id_log = ?', [id]);
-        return result.affectedRows > 0;
-    }
 }
 
 export type AuditFilters = {
