@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: trazabilidad_mysql
+    restart: always
+    environment:
+      # Las credenciales las pasa automáticamente asumiendo .env, o coge estos valores por defecto
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: trazabilidad_db
+    ports:
+      - "3306:3306"
+    volumes:
+      # Inyectar esquema SQL para que se ejecute la primera vez que se crea la BD
+      - ./server/database/init_schema.sql:/docker-entrypoint-initdb.d/init_schema.sql
+      # Archivo persistente para no perder los datos si el contenedor muere
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  api:
+    build: 
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: trazabilidad_node_api
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      # Sobrescribimos el host del .env para usar la red interna de docker ("db")
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_NAME=trazabilidad_db
+      - PORT=3000
+    depends_on:
+      db:
+        condition: service_healthy
+
+  panel:
+    build:
+      context: ./panel
+      dockerfile: Dockerfile
+    container_name: trazabilidad_panel
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      - VITE_BACKEND_URL=http://api:3000
+    depends_on:
+      - api
+
+volumes:
+  mysql_data:

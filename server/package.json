@@ -1,0 +1,47 @@
+{
+  "name": "trazabilidad-industrial-server",
+  "version": "1.0.0",
+  "description": "Servidor backend para el sistema de trazabilidad de producción industrial (TFG)",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "npm run build && npm start"
+  },
+  "keywords": [
+    "express",
+    "ejs",
+    "mysql",
+    "trazabilidad",
+    "industrial",
+    "tfg"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2",
+    "dotenv": "^16.3.1",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.6.5",
+    "reflect-metadata": "^0.2.1",
+    "socket.io": "^4.8.3",
+    "typedi": "^0.10.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cors": "^2.8.17",
+    "@types/body-parser": "^1.19.6",
+    "@types/ejs": "^3.1.5",
+    "@types/express": "^5.0.6",
+    "@types/express-session": "^1.18.2",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^25.5.2",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2"
+  }
+}

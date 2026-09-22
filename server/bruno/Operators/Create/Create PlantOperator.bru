@@ -1,0 +1,23 @@
+meta {
+  name: Create PlantOperator
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:3000/api/operarios
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZF9vcGVyYXJpbyI6MSwiTm9tYnJlX29wZXJhcmlvIjoiYWRtaW4iLCJSb2xfb3BlcmFyaW8iOiJBZG1pbiIsImlhdCI6MTc3OTM4MzE3OSwiZXhwIjoxNzc5OTg3OTc5fQ.dFxmZ7uQzWzFXva77NxIUA2MdsqvBt0aTveLqXhEYfQ
+}
+
+body:json {
+  {
+    "Nombre_operario": "operario1",
+    "Clave_operario": "tfg2026",
+    "Rol_operario": "Operario"
+  }
+}

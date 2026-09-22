@@ -1,0 +1,17 @@
+meta {
+  name: Update Order Status
+  type: http
+  seq: 18
+}
+
+patch {
+  url: http://localhost:3000/api/ordenesprod/1/estado
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "estado_ordenProd": "En Progreso"
+  }
+}

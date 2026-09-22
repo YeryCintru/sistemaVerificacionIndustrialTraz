@@ -1,0 +1,18 @@
+meta {
+  name: Login OperarioClient
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:3000/api/operarios/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "Nombre_operario": "operario1",
+    "Clave_operario": "tfg2026"
+  }
+}
