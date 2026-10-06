@@ -132,52 +132,18 @@ En resumen, combina automatización, control operativo y monitorización industr
 ---
 
   
+## Stack
 
-## Tecnologías utilizadas
-
-  
-
-### Backend
-
-- Node.js
-
-- Express
-
-- TypeScript
-
-- JWT
-
-- Socket.io
-
-- MySQL
-
-- Docker
-
-  
-
-### Frontend
-
-- React
-
-- Vite
-
-- TypeScript
-
-- Axios
-
-- React Router
-
-  
-
-### Escritorio
-
-- Electron
-
-- React
-
-- TypeScript
-
-  
+Capa | Tecnología | Runtime
+--- | --- | ---
+Backend | Node.js + Express + TypeScript | API REST / servicios
+Frontend web | React + Vite + Axios | Panel administrativo
+Escritorio | Electron + React | App local de línea de producción
+Comunicación en tiempo real | Socket.io | WebSockets
+Autenticación | JWT + bcrypt | Seguridad y sesiones operarias
+Persistencia | MySQL | Base de datos relacional
+Infraestructura | Docker + Docker Compose | Contenedores y despliegue
+Documentación / pruebas | Bruno + Markdown | API testing y docs
 
 ---
 
