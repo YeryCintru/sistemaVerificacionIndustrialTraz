@@ -1,129 +1,494 @@
-# Sistema de Verificación y Trazabilidad Industrial (TFG)
+# Sistema de Verificación y Trazabilidad Industrial
 
-Sistema cliente-servidor de verificación y trazabilidad para producción industrial.
-Universidad de San Jorge
-Grado en Ingeniería Informática
-Yeray Navascués Trincado
-17/06/2026
+  
 
-Este repositorio contiene los siguientes componentes principales:
+> Trabajo de Fin de Grado · Universidad San Jorge
 
-1. **Servidor (Backend API)**: API RESTful construida con Node.js, Express y MySQL.
-2. **Panel (Frontend Web)**: Panel de control web construido con React y Vite para la gestión y visualización de datos de trazabilidad.
-3. **Cliente (App de Escritorio)**: Aplicación nativa de escritorio construida con Electron y React para su uso en la línea de producción.
-4. **Base de Datos**: MySQL, gestionada y desplegada a través de Docker.
+  
 
-## ✨ Características Principales
-- 📡 **Sincronización en tiempo real** mediante WebSockets.
-- 🏭 **Control de trazabilidad** de órdenes de producción.
-- 📊 **Panel de administración web** intuitivo.
-- 🖥️ **Cliente de escritorio nativo** para su uso ágil en las líneas de ensamblaje.
 
-## 🔐 Credenciales de Prueba
-Para acceder al panel web o a la aplicación de escritorio al arrancar el proyecto, puedes utilizar el siguiente usuario predeterminado:
-- **Usuario:** `admin`
-- **Contraseña:** `tfg2026` 
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?logo=node.js&logoColor=white)](https://nodejs.org/) [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/) [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![Electron](https://img.shields.io/badge/Electron-28-47848F?logo=electron&logoColor=white)](https://www.electronjs.com/) [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/) [![MySQL](https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/) [![Socket.io](https://img.shields.io/badge/Socket.io-Real%20Time-010101?logo=socket.io&logoColor=white)](https://socket.io/)
 
-## 🚀 Requisitos Previos
+  
 
-- [Node.js](https://nodejs.org/) (versión recomendada 18+)
-- [Docker y Docker Compose](https://www.docker.com/) (para ejecutar la base de datos y servicios en contenedores)
+Sistema cliente-servidor para la gestión, supervisión y trazabilidad de procesos de producción industrial. El proyecto combina un backend API REST, un panel web de administración y una aplicación de escritorio para operarios, permitiendo monitorizar órdenes, verificar piezas y actualizar el estado en tiempo real de la producción.
 
-## 🛠️ Cómo arrancar el proyecto
+  
 
-Existen tres formas principales de arrancar el sistema: usando Docker para todos los servicios, ejecutándolos individualmente en modo desarrollo o híbrido entre los dos. Yo recomiendo de la forma que he desarrollado yo: la primera y tercera opción.
+---
 
-### Opción 1: Despliegue con Docker (Recomendada)
+  
 
-En la raíz del proyecto, puedes arrancar la base de datos, el servidor API y el panel web simultáneamente usando Docker Compose:
+## ¿Qué hace este proyecto?
+
+  
+
+Este sistema está pensado para una línea de producción donde es necesario:
+
+  
+
+- registrar productos y órdenes de fabricación,
+
+- controlar el estado de cada orden,
+
+- verificar la producción desde terminales de trabajo,
+
+- dar visibilidad al responsable mediante un panel web,
+
+- mantener la trazabilidad completa de cada proceso,
+
+- sincronizar cambios en tiempo real entre cliente y panel.
+
+  
+
+En resumen, combina automatización, control operativo y monitorización industrial en una única solución.
+
+  
+
+---
+
+  
+
+## Funcionalidades principales
+
+  
+
+- 🔐 autenticación de operarios con JWT,
+
+- 🏭 gestión de productos y órdenes de producción,
+
+- 📦 trazabilidad completa de cada ciclo de producción,
+
+- 🖥️ cliente de escritorio para verificación en línea de fabricación,
+
+- 📊 panel web para gestión y auditoría,
+
+- ⚡ sincronización en tiempo real mediante WebSockets,
+
+- 🧾 registro de auditoría de acciones operativas,
+
+- 🗃️ persistencia con MySQL y Docker.
+
+  
+
+---
+
+  
+
+## Arquitectura del sistema
+
+  
+
+```text
+
+┌──────────────────────────────┐
+
+│   Panel Web (React + Vite)  │
+
+│   Supervisión / gestión      │
+
+└──────────────┬──────────────┘
+
+               │ HTTP / REST + WebSockets
+
+┌──────────────▼──────────────┐
+
+│   Backend API (Node.js)     │
+
+│   Express + Socket.io       │
+
+│   JWT + middleware auth     │
+
+└──────────────┬──────────────┘
+
+               │
+
+┌──────────────▼──────────────┐
+
+│   Base de datos MySQL       │
+
+│   Productos / Órdenes       │
+
+│   Operarios / Auditoría     │
+
+└─────────────────────────────┘
+
+               ▲
+
+               │
+
+┌──────────────┴──────────────┐
+
+│ Cliente Desktop (Electron)  │
+
+│ Verificación de producción  │
+
+└─────────────────────────────┘
+
+```
+
+  
+
+---
+
+  
+
+## Tecnologías utilizadas
+
+  
+
+### Backend
+
+- Node.js
+
+- Express
+
+- TypeScript
+
+- JWT
+
+- Socket.io
+
+- MySQL
+
+- Docker
+
+  
+
+### Frontend
+
+- React
+
+- Vite
+
+- TypeScript
+
+- Axios
+
+- React Router
+
+  
+
+### Escritorio
+
+- Electron
+
+- React
+
+- TypeScript
+
+  
+
+---
+
+  
+
+## Estructura del repositorio
+
+  
+
+```text
+
+sistemaVerificacionIndustrialTraz/
+
+├── client/                 # Aplicación desktop Electron
+
+│   ├── src/
+
+│   ├── internal/
+
+│   └── package.json
+
+├── panel/                  # Panel web administrativo
+
+│   ├── src/
+
+│   ├── public/
+
+│   └── package.json
+
+├── server/                 # Backend API + WebSockets
+
+│   ├── src/
+
+│   ├── database/
+
+│   ├── bruno/
+
+│   └── package.json
+
+├── docker-compose.yml      # Orquestación de servicios
+
+├── README.md               # Documentación del proyecto
+
+├── internal/               # Documentación interna y notas del TFG
+
+└── .gitignore
+
+```
+
+  
+
+---
+
+  
+
+## Inicio rápido
+
+  
+
+### Requisitos previos
+
+  
+
+- [Node.js 18+](https://nodejs.org/)
+
+- [Docker](https://www.docker.com/) y Docker Compose
+
+  
+
+### 1. Clonar el repositorio
+
+  
 
 ```bash
+
+git clone https://github.com/tu-usuario/sistemaVerificacionIndustrialTraz.git
+
+cd sistemaVerificacionIndustrialTraz
+
+```
+
+  
+
+### 2. Levantar la infraestructura con Docker
+
+  
+
+```bash
+
 docker-compose up -d --build
+
 ```
 
-Esto levantará los siguientes contenedores:
-- **db**: Base de datos MySQL (puerto `3306`).
-- **api**: Servidor Node.js (puerto `3000`).
-- **panel**: Panel web (puerto `80`).
+  
 
-> **Nota sobre Base de Datos**: Al levantar Docker por primera vez, la base de datos se creará y se poblará automáticamente con las tablas iniciales y el usuario administrador de prueba gracias al archivo `init_schema.sql`.
-> Si en algún momento necesitas **borrar la base de datos** por completo y empezar de cero (por ejemplo, para que vuelva a coger los datos de inicialización), ejecuta:
-> ```bash
-> docker-compose down -v
-> ```
+Esto inicia:
 
+  
 
-*(Nota: El cliente de escritorio Electron debe ejecutarse siempre de manera local. Sigue el paso 4 de la Opción 2).*
+- MySQL en el puerto `3306`
 
-### Opción 2: Ejecución individual para desarrollo local (Opcional)
+- API backend en `http://localhost:3000`
 
-Si necesitas desarrollar o hacer cambios, es mejor arrancar cada componente individualmente.
+- Panel web en `http://localhost`
 
-> **Importante para el Servidor**: Si vas a levantar el servidor Node.js fuera de Docker, asegúrate de tener un archivo `.env` dentro de la carpeta `/server` con los datos de conexión a la base de datos (por ejemplo, `DB_PASSWORD=root`), ya que de lo contrario fallará la conexión.
+  
 
-#### 1. Base de Datos
-Puedes levantar solo la base de datos usando Docker:
+> La base de datos se crea automáticamente con el esquema inicial y un usuario administrador por defecto.
+
+  
+
+### 3. Ejecutar cada componente en modo desarrollo
+
+  
+
+#### Backend
+
 ```bash
-docker-compose up db -d
-```
 
-#### 2. Servidor (Backend)
-Abre una terminal en la carpeta `/server`:
-```bash
 cd server
+
 npm install
+
 npm run dev
+
 ```
 
-#### 3. Panel Web
-Abre una nueva terminal en la carpeta `/panel`:
+  
+
+#### Panel web
+
 ```bash
+
 cd panel
+
 npm install
+
 npm run dev
+
 ```
 
-#### 4. Cliente de Escritorio (Electron)
-Abre una nueva terminal en la carpeta `/client`:
+  
+
+#### Cliente desktop
+
 ```bash
+
 cd client
+
 npm install
+
 npm start
+
 ```
 
-### Opción 3: Despliegue parcial (Recomendada)
-Yo personalmente he estado trabajando de forma híbrida:
-- Levanto siempre el backend (servidor) con la base de datos en el docker.
-- El panel aparte como explicado en la opción anterior para ver cambios en vivo.
-- El cliente aparte por supuesto también.
+  
 
-(No he levantado nunca el servidor de forma individual)
+---
 
-## 📖 Guía Rápida de Uso
+  
 
-Para probar el flujo principal del sistema rápidamente:
+## Credenciales de prueba
 
-1. **Inicia sesión** en el Panel Web (`http://localhost`) usando las credenciales de prueba (`admin` / `tfg2026`).
-2. **Crea un Producto** desde la pestaña correspondiente en el panel.
-3. **Crea una Orden de Producción** asignando el producto creado y la cantidad a fabricar.
-4. Abre el **Cliente de Escritorio (Electron)** e inicia sesión.
-5. Selecciona la orden que acabas de crear y comienza el **proceso de verificación/trazabilidad**.
-6. Observa cómo el progreso se refleja en el **Panel Web en tiempo real** gracias a los WebSockets.
+  
 
-## 🧪 Pruebas de API con Bruno
+El proyecto incluye un usuario administrador de ejemplo para entrar al sistema:
 
-Si deseas probar o explorar los endpoints de la API del servidor manualmente, el proyecto incluye una colección de peticiones lista para usar con **[Bruno](https://www.usebruno.com/)** (una alternativa ligera a Postman). 
+  
 
-Para utilizarla:
-1. Descarga e instala Bruno.
-2. Abre la aplicación y selecciona **"Open Collection"**.
-3. Navega hasta la carpeta `/server/bruno` de este proyecto y ábrela.
-4. Ahí tendrás documentadas y listas las peticiones HTTP al backend.
+- Usuario: `admin`
 
-## 📦 Empaquetado del Cliente
+- Contraseña: `tfg2026`
 
-Para generar el instalador de la aplicación de escritorio (Cliente Electron) en Windows:
-```bash
-cd client
-npm run package
+  
+
+Estas credenciales se cargan en la base de datos al inicializar el esquema con Docker.
+
+  
+
+---
+
+  
+
+## Variables de entorno
+
+  
+
+El backend usa un archivo `.env` dentro de la carpeta `server/` con configuración mínima:
+
+  
+
+```env
+
+PORT=3000
+
+OPERARIO_JWT_SECRET=tu_clave_secreta_operarios
+
+OPERARIO_JWT_EXPIRATION=7d
+
+OPERARIO_SESSION_DAYS=7
+
 ```
+
+  
+
+---
+
+  
+
+## Flujo principal de uso
+
+  
+
+1. El administrador crea productos y órdenes desde el panel web.
+
+2. El operario accede desde el cliente de escritorio.
+
+3. Se verifica el proceso/producto asociado a la orden.
+
+4. El estado cambia en la base de datos.
+
+5. Los clientes conectados reciben actualizaciones en tiempo real por WebSockets.
+
+6. El panel refleja los cambios de forma inmediata.
+
+  
+
+---
+
+  
+
+## Documentación adicional
+
+  
+
+El repositorio incluye material de apoyo en la carpeta `internal/`, con documentación y recursos del proyecto:
+
+  
+
+- contexto del TFG,
+
+- planificación,
+
+- tareas,
+
+- endpoints,
+
+- notas internas.
+
+  
+
+También se incluye una colección de pruebas HTTP para Bruno en `server/bruno/`.
+
+  
+
+---
+
+  
+
+## Estado del proyecto
+
+  
+
+Este repositorio está estructurado como una solución completa de trazabilidad industrial con tres capas bien diferenciadas:
+
+  
+
+- backend API,
+
+- frontend web de gestión,
+
+- cliente desktop de producción,
+
+- base de datos y contenedores de despliegue.
+
+  
+
+El enfoque del proyecto combina un flujo de trabajo realista de industria con un caso práctico de aplicación web y escritorio, usando tecnologías actuales y un modelo de sincronización en tiempo real.
+
+  
+
+---
+
+  
+
+## Autor
+
+  
+
+- Yeray Navascués Trincado
+
+- Grado en Ingeniería Informática
+
+- Universidad San Jorge
+
+  
+
+---
+
+  
+
+## Licencia
+
+  
+
+Este proyecto está bajo la licencia ISC.
+
+  
+
+---
+
+  
+
+*Proyecto académico desarrollado como Trabajo de Fin de Grado en sistemas de trazabilidad y verificación industrial.*
